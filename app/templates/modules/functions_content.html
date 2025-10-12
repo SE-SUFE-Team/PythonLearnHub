@@ -1,0 +1,71 @@
+<!-- 函数模块内容 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-info-circle"></i> 模块介绍</h5>
+    </div>
+    <div class="card-body">
+        <p>函数是Python编程中的重要概念。本模块将介绍函数的定义、调用、参数传递、返回值等基本用法。</p>
+    </div>
+</div>
+
+{% for example in module.examples %}
+<div class="card mb-4" id="example-{{ loop.index }}">
+    <div class="card-header">
+        <h5><i class="fas fa-play-circle text-primary"></i> {{ example.title }}</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ example.description }}</p>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-light">
+                    <div class="card-body">
+                        <pre><code class="language-python">{{ example.code }}</code></pre>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="executeCode('{{ example.code|e }}')">
+                            <i class="fas fa-play"></i> 运行代码
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- 代码执行区域 -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-code"></i> 代码练习</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>输入代码:</h6>
+                <textarea id="codeInput" class="form-control" rows="10" 
+                          placeholder="在这里输入Python代码..."># 函数示例
+def greet(name):
+    return f"Hello, {name}!"
+
+def add(a, b):
+    return a + b
+
+# 调用函数
+message = greet("Python")
+result = add(3, 5)
+
+print(message)
+print(f"3 + 5 = {result}")</textarea>
+                <button class="btn btn-primary mt-2" onclick="executeUserCode()">
+                    <i class="fas fa-play"></i> 执行代码
+                </button>
+            </div>
+            <div class="col-md-6">
+                <h6>执行结果:</h6>
+                <div id="output" class="form-control" style="height: 200px; background-color: #f8f9fa; overflow-y: auto;">
+                    点击"执行代码"查看结果...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

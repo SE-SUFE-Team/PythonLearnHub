@@ -1,0 +1,73 @@
+<!-- 变量和数据类型模块内容 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-info-circle"></i> 模块介绍</h5>
+    </div>
+    <div class="card-body">
+        <p>变量和数据类型是Python编程的基础。本模块将介绍Python中的基本数据类型，包括数字、字符串、布尔值等，以及如何创建和使用变量。</p>
+    </div>
+</div>
+
+{% for topic_id, topic_data in module.topics.items() %}
+<div class="card mb-4" id="topic-{{ topic_id }}">
+    <div class="card-header">
+        <h5><i class="fas fa-play-circle text-primary"></i> {{ topic_data.title }}</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ topic_data.description }}</p>
+        
+        {% if topic_data.examples %}
+        <div class="row">
+            {% for example in topic_data.examples %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-light">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{{ example.title }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <pre><code class="language-python">{{ example.code }}</code></pre>
+                        {% if example.description %}
+                        <p class="text-muted small">{{ example.description }}</p>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="executeCode('{{ example.code|e }}')">
+                            <i class="fas fa-play"></i> 运行代码
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- 代码执行区域 -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-code"></i> 代码练习</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>输入代码:</h6>
+                <textarea id="codeInput" class="form-control" rows="10" 
+                          placeholder="在这里输入Python代码..."># 变量和数据类型示例
+name = "Python"
+age = 30
+is_student = True
+print(f"姓名: {name}, 年龄: {age}, 是否为学生: {is_student}")</textarea>
+                <button class="btn btn-primary mt-2" onclick="executeUserCode()">
+                    <i class="fas fa-play"></i> 执行代码
+                </button>
+            </div>
+            <div class="col-md-6">
+                <h6>执行结果:</h6>
+                <div id="output" class="form-control" style="height: 200px; background-color: #f8f9fa; overflow-y: auto;">
+                    点击"执行代码"查看结果...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

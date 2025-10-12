@@ -1,0 +1,74 @@
+<!-- 字符串操作模块内容 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-info-circle"></i> 模块介绍</h5>
+    </div>
+    <div class="card-body">
+        <p>字符串是Python中最常用的数据类型之一。本模块将介绍字符串的各种操作方法，包括字符串格式化、分割、连接、查找等。</p>
+    </div>
+</div>
+
+{% for category_key, category_name in module.categories.items() %}
+<div class="card mb-4" id="category-{{ category_key }}">
+    <div class="card-header">
+        <h5><i class="fas fa-tag text-primary"></i> {{ category_name }}</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ category_name }}相关示例</p>
+        
+        <div class="row">
+            {% for example in module.examples %}
+                {% if example.category == category_key %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-light">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">{{ example.title }}</h6>
+                        </div>
+                        <div class="card-body">
+                            <pre><code class="language-python">{{ example.code }}</code></pre>
+                            {% if example.description %}
+                            <p class="text-muted small">{{ example.description }}</p>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="executeCode('{{ example.code|e }}')">
+                                <i class="fas fa-play"></i> 运行代码
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- 代码执行区域 -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-code"></i> 代码练习</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>输入代码:</h6>
+                <textarea id="codeInput" class="form-control" rows="10" 
+                          placeholder="在这里输入Python代码..."># 字符串操作示例
+text = "Hello, Python!"
+print(f"原始字符串: {text}")
+print(f"大写: {text.upper()}")
+print(f"小写: {text.lower()}")
+print(f"长度: {len(text)}")</textarea>
+                <button class="btn btn-primary mt-2" onclick="executeUserCode()">
+                    <i class="fas fa-play"></i> 执行代码
+                </button>
+            </div>
+            <div class="col-md-6">
+                <h6>执行结果:</h6>
+                <div id="output" class="form-control" style="height: 200px; background-color: #f8f9fa; overflow-y: auto;">
+                    点击"执行代码"查看结果...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}关于 - Python学习平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-info-circle"></i> 关于Python学习平台
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4>平台简介</h4>
+                        <p class="lead">
+                            Python学习平台是一个集成的Web学习环境，专为Python编程学习者设计。
+                            平台整合了多个Python学习模块，提供安全可靠的代码执行环境和丰富的学习资源。
+                        </p>
+                        
+                        <h5 class="mt-4">主要特性</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="fas fa-shield-alt text-success"></i>
+                                <strong>安全代码执行</strong> - 内置安全执行器，支持大部分Python语法
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-book text-primary"></i>
+                                <strong>9个学习模块</strong> - 从基础到高级，系统学习Python知识
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-code text-info"></i>
+                                <strong>丰富示例</strong> - 每个模块都包含大量示例代码和练习
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-tools text-warning"></i>
+                                <strong>实用工具</strong> - 正则表达式测试、代码练习场等工具
+                            </li>
+                        </ul>
+                        
+                        <h5 class="mt-4">学习模块</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>基础模块</h6>
+                                <ul>
+                                    <li>变量和数据类型</li>
+                                    <li>字符串操作</li>
+                                    <li>列表和列表生成式</li>
+                                    <li>元组</li>
+                                    <li>流程控制</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>进阶模块</h6>
+                                <ul>
+                                    <li>函数</li>
+                                    <li>异常和断言</li>
+                                    <li>文件操作</li>
+                                    <li>正则表达式</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-university"></i> 版权信息
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>版权归相关机构所有</strong>
+                                </p>
+                                <p class="card-text small text-muted">
+                                    本平台仅供教学和学习使用，严禁用于商业目的。
+                                </p>
+                                <hr>
+                                <h6>技术栈</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-primary">Flask</span>
+                                    <span class="badge bg-success">Python</span>
+                                    <span class="badge bg-info">Bootstrap</span>
+                                    <span class="badge bg-warning">JavaScript</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card border-success mt-3">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-graduation-cap"></i> 学习建议
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ol class="mb-0 small">
+                                    <li>从基础模块开始学习</li>
+                                    <li>多动手实践代码</li>
+                                    <li>利用工具进行练习</li>
+                                    <li>循序渐进，不要急于求成</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

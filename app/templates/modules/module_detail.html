@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}{{ module_info.title }} - Python学习平台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 模块头部 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">
+                                <i class="fas fa-{{ module_info.icon.replace('📊', 'chart-bar').replace('📝', 'edit').replace('📦', 'box').replace('📋', 'list').replace('🔄', 'sync').replace('🔧', 'tools').replace('⚠️', 'exclamation-triangle').replace('📁', 'folder').replace('🔍', 'search') }}"></i>
+                                {{ module_info.title }}
+                            </h2>
+                            <p class="mb-0 mt-2">{{ module_info.description }}</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-light text-dark fs-6">
+                                {{ module_info.difficulty }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模块内容 -->
+    <div class="row">
+        <!-- 左侧导航 -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-list"></i> 学习内容</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if module_id == 'variables' %}
+                            {% for topic_id, topic_data in module.topics.items() %}
+                            <a href="{{ url_for('main.topic_detail', module_id=module_id, topic_id=topic_id) }}" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                {{ topic_data.title }}
+                            </a>
+                            {% endfor %}
+                        {% elif module_id == 'strings' %}
+                            {% for category_key, category_name in module.categories.items() %}
+                            <a href="#category-{{ category_key }}" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="scrollToCategory('category-{{ category_key }}')">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                {{ category_name }}
+                            </a>
+                            {% endfor %}
+                        {% elif module_id == 'tuples' %}
+                            {% for example_id, example_data in module.examples.items() %}
+                            <a href="#topic-{{ example_id }}" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="scrollToTopic('topic-{{ example_id }}')">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                {{ example_data.title }}
+                            </a>
+                            {% endfor %}
+                        {% elif module_id == 'lists' %}
+                            {% for topic_id, topic_data in module.topics.items() %}
+                            <a href="{{ url_for('main.topic_detail', module_id=module_id, topic_id=topic_id) }}" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                {{ topic_data.title }}
+                            </a>
+                            {% endfor %}
+                        {% elif module_id == 'flow_control' %}
+                            {% for topic_id, topic_data in module.items() %}
+                                {% if topic_data.title %}
+                                <a href="#topic-{{ topic_id }}" 
+                                   class="list-group-item list-group-item-action" 
+                                   onclick="scrollToTopic('topic-{{ topic_id }}')">
+                                    <i class="fas fa-play-circle text-primary me-2"></i>
+                                    {{ topic_data.title }}
+                                </a>
+                                {% endif %}
+                            {% endfor %}
+                        {% elif module_id == 'functions' %}
+                            {% for example in module.examples %}
+                            <a href="#example-{{ loop.index }}" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="scrollToExample('example-{{ loop.index }}')">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                {{ example.title }}
+                            </a>
+                            {% endfor %}
+                        {% elif module_id == 'exceptions' %}
+                            <a href="#exception-examples" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="scrollToSection('exception-examples')">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                异常处理示例
+                            </a>
+                            <a href="#assertion-examples" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="scrollToSection('assertion-examples')">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                断言示例
+                            </a>
+                        {% elif module_id == 'files' %}
+                            <a href="{{ url_for('files.text_operations') }}" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                文本操作
+                            </a>
+                        {% elif module_id == 'regex' %}
+                            <a href="{{ url_for('regex.test_regex') }}" 
+                               class="list-group-item list-group-item-action">
+                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                正则表达式测试
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧内容 -->
+        <div class="col-md-9">
+            {% if module_id == 'variables' %}
+                {% include 'modules/variables_content.html' %}
+            {% elif module_id == 'strings' %}
+                {% include 'modules/strings_content.html' %}
+            {% elif module_id == 'tuples' %}
+                {% include 'modules/tuples_content.html' %}
+            {% elif module_id == 'lists' %}
+                {% include 'modules/lists_content.html' %}
+            {% elif module_id == 'flow_control' %}
+                {% include 'modules/flow_control_content.html' %}
+            {% elif module_id == 'functions' %}
+                {% include 'modules/functions_content.html' %}
+            {% elif module_id == 'exceptions' %}
+                {% include 'modules/exceptions_content.html' %}
+            {% elif module_id == 'files' %}
+                {% include 'modules/files_content.html' %}
+            {% elif module_id == 'regex' %}
+                {% include 'modules/regex_content.html' %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body">
+                        <h5>模块内容</h5>
+                        <p>该模块的内容正在开发中...</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function scrollToTopic(topicId) {
+    const element = document.getElementById(topicId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToExample(exampleId) {
+    const element = document.getElementById(exampleId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToSection(sectionId) {
+    const element = document.getElementById(sectionId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToCategory(categoryId) {
+    const element = document.getElementById(categoryId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+</script>
+{% endblock %}

@@ -30,7 +30,7 @@ def module_detail(module_id):
     if module_id in ALL_MODULES:
         module_data = ALL_MODULES[module_id]
         module_info = next((m for m in MODULE_NAVIGATION if m['id'] == module_id), None)
-        return render_template('module_detail.html', 
+        return render_template('modules/module_detail.html', 
                              module=module_data, 
                              module_info=module_info,
                              module_id=module_id)
@@ -233,6 +233,7 @@ def register_error_handlers(app):
                              error_message="服务器内部错误"), 500
 
 
+@main_bp.context_processor
 def inject_navigation():
     """注入导航数据到所有模板"""
     return dict(

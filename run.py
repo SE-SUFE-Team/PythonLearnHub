@@ -11,7 +11,7 @@ app = create_app(DevelopmentConfig)
 
 if __name__ == '__main__':
     print("Python学习平台启动中...")
-    print("访问 http://localhost:5000 开始学习")
+    print("访问 http://localhost:5001 开始学习")
     print("安全代码执行环境已启用")
     print("包含以下学习模块:")
     print("   - 变量和数据类型")
@@ -28,5 +28,5 @@ if __name__ == '__main__':
     app.run(
         debug=True,
         host='0.0.0.0',
-        port=5000
+        port=5001
     )

@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+
+{% block title %}正则表达式工具 - Python学习平台{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h2><i class="fas fa-search"></i> 正则表达式工具</h2>
+        <p class="text-muted">测试和学习正则表达式的交互式工具</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> 正则表达式设置</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="regex-pattern" class="form-label">正则表达式模式:</label>
+                    <input type="text" id="regex-pattern" class="form-control font-monospace" 
+                           placeholder="例如: \d+|[a-zA-Z]+" value="\d+">
+                    <small class="form-text text-muted">输入要测试的正则表达式</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="test-string" class="form-label">测试字符串:</label>
+                    <textarea id="test-string" class="form-control" rows="4" 
+                              placeholder="输入要匹配的文本">今天是2024年1月1日，电话号码是138-0000-1234</textarea>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="regex-function" class="form-label">函数类型:</label>
+                        <select id="regex-function" class="form-select">
+                            <option value="re.findall">re.findall()</option>
+                            <option value="re.search">re.search()</option>
+                            <option value="re.match">re.match()</option>
+                            <option value="re.finditer">re.finditer()</option>
+                            <option value="re.split">re.split()</option>
+                            <option value="re.sub">re.sub()</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="regex-flags" class="form-label">标志 (可选):</label>
+                        <input type="text" id="regex-flags" class="form-control" 
+                               placeholder="如: IGNORECASE|MULTILINE">
+                    </div>
+                </div>
+                
+                <div id="replacement-group" class="mb-3" style="display: none;">
+                    <label for="replacement-text" class="form-label">替换文本:</label>
+                    <input type="text" id="replacement-text" class="form-control" 
+                           placeholder="替换为..." value="X">
+                </div>
+                
+                <button id="test-regex" class="btn btn-primary">
+                    <i class="fas fa-play"></i> 测试正则表达式
+                </button>
+                <button class="btn btn-outline-secondary" onclick="clearAll()">
+                    <i class="fas fa-trash"></i> 清空
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-terminal"></i> 匹配结果</h5>
+            </div>
+            <div class="card-body">
+                <div id="result-area" class="result-area bg-light p-3 rounded">
+                    <div class="text-muted text-center">
+                        <i class="fas fa-arrow-left"></i> 点击"测试正则表达式"查看结果
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Examples -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-lightbulb"></i> 常用正则表达式示例</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>基础模式:</h6>
+                        <div class="example-buttons">
+                            <button class="btn btn-sm btn-outline-primary mb-1" onclick="loadExample('digits')">数字 (\d+)</button>
+                            <button class="btn btn-sm btn-outline-primary mb-1" onclick="loadExample('words')">单词 (\w+)</button>
+                            <button class="btn btn-sm btn-outline-primary mb-1" onclick="loadExample('email')">邮箱</button>
+                            <button class="btn btn-sm btn-outline-primary mb-1" onclick="loadExample('phone')">电话号码</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>高级模式:</h6>
+                        <div class="example-buttons">
+                            <button class="btn btn-sm btn-outline-success mb-1" onclick="loadExample('url')">URL</button>
+                            <button class="btn btn-sm btn-outline-success mb-1" onclick="loadExample('date')">日期</button>
+                            <button class="btn btn-sm btn-outline-success mb-1" onclick="loadExample('ip')">IP地址</button>
+                            <button class="btn btn-sm btn-outline-success mb-1" onclick="loadExample('chinese')">中文字符</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Regex Reference -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-book"></i> 正则表达式参考</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>字符类:</h6>
+                        <ul class="small">
+                            <li><code>.</code> - 任意字符</li>
+                            <li><code>\d</code> - 数字</li>
+                            <li><code>\w</code> - 字母数字下划线</li>
+                            <li><code>\s</code> - 空白字符</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>量词:</h6>
+                        <ul class="small">
+                            <li><code>*</code> - 0次或多次</li>
+                            <li><code>+</code> - 1次或多次</li>
+                            <li><code>?</code> - 0次或1次</li>
+                            <li><code>{n,m}</code> - n到m次</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>锚点:</h6>
+                        <ul class="small">
+                            <li><code>^</code> - 行开始</li>
+                            <li><code>$</code> - 行结束</li>
+                            <li><code>\b</code> - 单词边界</li>
+                            <li><code>\B</code> - 非单词边界</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>组:</h6>
+                        <ul class="small">
+                            <li><code>()</code> - 捕获组</li>
+                            <li><code>(?:)</code> - 非捕获组</li>
+                            <li><code>[]</code> - 字符集</li>
+                            <li><code>|</code> - 或</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copyright Notice for Tool -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-light border-primary text-center">
+            <small class="text-muted">
+                <i class="fas fa-university"></i>
+                正则表达式工具版权归 <strong></strong> 所有
+                | 仅供教学和学习使用
+            </small>
+        </div>
+    </div>
+</div>
+
+<style>
+.result-area {
+    min-height: 250px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}
+
+.match-highlight {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.success-message {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.example-buttons button {
+    margin-right: 5px;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--bs-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const regexFunction = document.getElementById('regex-function');
+    const replacementGroup = document.getElementById('replacement-group');
+    const testButton = document.getElementById('test-regex');
+    
+    // Show/hide replacement field based on function type
+    regexFunction.addEventListener('change', function() {
+        if (this.value === 're.sub') {
+            replacementGroup.style.display = 'block';
+        } else {
+            replacementGroup.style.display = 'none';
+        }
+    });
+    
+    // Test regex button
+    testButton.addEventListener('click', function() {
+        const pattern = document.getElementById('regex-pattern').value;
+        const testString = document.getElementById('test-string').value;
+        const func = regexFunction.value;
+        const flags = document.getElementById('regex-flags').value;
+        const replacement = document.getElementById('replacement-text').value;
+        
+        if (!pattern) {
+            showError('请输入正则表达式模式');
+            return;
+        }
+        
+        if (!testString) {
+            showError('请输入测试字符串');
+            return;
+        }
+        
+        testRegex(pattern, testString, func, flags, replacement);
+    });
+    
+    // Enter key to test
+    document.getElementById('regex-pattern').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            testButton.click();
+        }
+    });
+});
+
+function testRegex(pattern, testString, func, flags, replacement) {
+    const testButton = document.getElementById('test-regex');
+    const originalText = testButton.innerHTML;
+    
+    testButton.innerHTML = '<span class="loading-spinner"></span> 测试中...';
+    testButton.disabled = true;
+    
+    const requestData = {
+        pattern: pattern,
+        test_string: testString,
+        function: func,
+        flags: flags
+    };
+    
+    if (func === 're.sub') {
+        requestData.replacement = replacement;
+    }
+    
+    fetch('/api/regex/test', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showError(data.error);
+        } else {
+            showResult(data, func, testString);
+        }
+    })
+    .catch(error => {
+        showError(`网络错误: ${error.message}`);
+    })
+    .finally(() => {
+        testButton.innerHTML = originalText;
+        testButton.disabled = false;
+    });
+}
+
+function showResult(data, func, originalString) {
+    const resultArea = document.getElementById('result-area');
+    let html = '';
+    
+    if (func === 're.findall') {
+        html = `<div class="success-message">
+            <strong>找到 ${data.result.length} 个匹配项:</strong>
+        </div>`;
+        
+        if (data.result.length > 0) {
+            html += '<div class="mt-2">';
+            data.result.forEach((match, index) => {
+                html += `<div class="mb-1"><code class="match-highlight">[${index}] ${escapeHtml(match)}</code></div>`;
+            });
+            html += '</div>';
+        }
+    } else if (func === 're.search' || func === 're.match') {
+        if (data.result) {
+            html = `<div class="success-message">
+                <strong>匹配成功:</strong>
+            </div>
+            <div class="mt-2">
+                <div><strong>匹配内容:</strong> <code class="match-highlight">${escapeHtml(data.result)}</code></div>
+                <div><strong>位置:</strong> ${data.span[0]} - ${data.span[1]}</div>`;
+            
+            if (data.groups && data.groups.length > 0) {
+                html += '<div><strong>捕获组:</strong></div>';
+                data.groups.forEach((group, index) => {
+                    html += `<div class="ms-3">组 ${index + 1}: <code>${escapeHtml(group || 'None')}</code></div>`;
+                });
+            }
+            html += '</div>';
+        } else {
+            html = '<div class="error-message">没有找到匹配项</div>';
+        }
+    } else if (func === 're.finditer') {
+        html = `<div class="success-message">
+            <strong>找到 ${data.result.length} 个匹配项:</strong>
+        </div>`;
+        
+        if (data.result.length > 0) {
+            html += '<div class="mt-2">';
+            data.result.forEach((match, index) => {
+                html += `<div class="mb-2">
+                    <div><strong>[${index}]</strong> <code class="match-highlight">${escapeHtml(match.match)}</code></div>
+                    <div class="small text-muted">位置: ${match.span[0]} - ${match.span[1]}</div>`;
+                
+                if (match.groups && match.groups.length > 0) {
+                    html += '<div class="small">捕获组: ';
+                    match.groups.forEach((group, gIndex) => {
+                        html += `<code>${escapeHtml(group || 'None')}</code> `;
+                    });
+                    html += '</div>';
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+        }
+    } else if (func === 're.split') {
+        html = `<div class="success-message">
+            <strong>分割结果 (${data.result.length} 部分):</strong>
+        </div>
+        <div class="mt-2">`;
+        
+        data.result.forEach((part, index) => {
+            html += `<div><strong>[${index}]</strong> <code>${escapeHtml(part)}</code></div>`;
+        });
+        html += '</div>';
+    } else if (func === 're.sub') {
+        html = `<div class="success-message">
+            <strong>替换结果:</strong>
+        </div>
+        <div class="mt-2">
+            <div><strong>原文:</strong> <code>${escapeHtml(originalString)}</code></div>
+            <div><strong>结果:</strong> <code class="match-highlight">${escapeHtml(data.result)}</code></div>
+        </div>`;
+    }
+    
+    resultArea.innerHTML = html;
+}
+
+function showError(message) {
+    const resultArea = document.getElementById('result-area');
+    resultArea.innerHTML = `<div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i> ${escapeHtml(message)}
+    </div>`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function clearAll() {
+    document.getElementById('regex-pattern').value = '';
+    document.getElementById('test-string').value = '';
+    document.getElementById('regex-flags').value = '';
+    document.getElementById('replacement-text').value = 'X';
+    document.getElementById('result-area').innerHTML = `
+        <div class="text-muted text-center">
+            <i class="fas fa-arrow-left"></i> 点击"测试正则表达式"查看结果
+        </div>`;
+}
+
+function loadExample(type) {
+    const examples = {
+        'digits': {
+            pattern: '\\d+',
+            text: '今天是2024年1月1日，温度是25度',
+            desc: '匹配一个或多个数字'
+        },
+        'words': {
+            pattern: '\\w+',
+            text: 'Hello World! 你好世界！',
+            desc: '匹配单词字符'
+        },
+        'email': {
+            pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
+            text: '联系邮箱: test@example.com 和 admin@site.org',
+            desc: '匹配邮箱地址'
+        },
+        'phone': {
+            pattern: '\\d{3}-\\d{4}-\\d{4}',
+            text: '电话号码: 138-0000-1234 和 186-1234-5678',
+            desc: '匹配手机号码格式'
+        },
+        'url': {
+            pattern: 'https?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?:/[^\\s]*)?',
+            text: '访问 https://www.example.com 或 http://test.org/page',
+            desc: '匹配URL地址'
+        },
+        'date': {
+            pattern: '\\d{4}年\\d{1,2}月\\d{1,2}日',
+            text: '今天是2024年1月1日，明天是2024年1月2日',
+            desc: '匹配中文日期格式'
+        },
+        'ip': {
+            pattern: '\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b',
+            text: '服务器IP: 192.168.1.1 和 10.0.0.1',
+            desc: '匹配IP地址'
+        },
+        'chinese': {
+            pattern: '[\\u4e00-\\u9fff]+',
+            text: 'Hello 你好 World 世界 123',
+            desc: '匹配中文字符'
+        }
+    };
+    
+    if (examples[type]) {
+        document.getElementById('regex-pattern').value = examples[type].pattern;
+        document.getElementById('test-string').value = examples[type].text;
+        
+        // Show description in result area
+        document.getElementById('result-area').innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 
+                <strong>示例说明:</strong> ${examples[type].desc}
+                <br><small>点击"测试正则表达式"查看匹配结果</small>
+            </div>`;
+    }
+}
+</script>
+{% endblock %}

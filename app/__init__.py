@@ -41,4 +41,8 @@ def create_app(config_class=Config):
     from app.views.main import register_error_handlers
     register_error_handlers(app)
     
+    # 注册上下文处理器
+    from app.views.main import inject_navigation
+    app.context_processor(inject_navigation)
+    
     return app

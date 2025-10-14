@@ -8,7 +8,7 @@
     </div>
 </div>
 
-<div class="card mb-4">
+<div class="card mb-4" id="files-text-operations">
     <div class="card-header">
         <h5><i class="fas fa-file-text text-primary"></i> 文本操作</h5>
     </div>
@@ -19,6 +19,36 @@
         </a>
     </div>
 </div>
+
+<!-- 文件操作示例 -->
+{% if module.examples %}
+{% for example in module.examples %}
+<div class="card mb-4" id="files-example-{{ loop.index }}">
+    <div class="card-header">
+        <h5><i class="fas fa-play-circle text-primary"></i> {{ example.title }}</h5>
+    </div>
+    <div class="card-body">
+        {% if example.description %}
+        <p>{{ example.description }}</p>
+        {% endif %}
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-light">
+                    <div class="card-body">
+                        <pre><code class="language-python">{{ example.code }}</code></pre>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="executeCode('{{ example.code|e }}')">
+                            <i class="fas fa-play"></i> 运行代码
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
 
 <!-- 代码执行区域 -->
 <div class="card">

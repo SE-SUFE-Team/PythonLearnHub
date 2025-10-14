@@ -13,19 +13,19 @@ tools_bp = Blueprint('tools', __name__)
 @tools_bp.route('/')
 def tools():
     """工具页面"""
-    return render_template('tools/tools.html')
+    return render_template('tools.html')
 
 
 @tools_bp.route('/regex')
 def regex_tool():
     """正则表达式工具"""
-    return render_template('tools/regex_tool.html')
+    return render_template('regex_tool.html')
 
 
 @tools_bp.route('/code_playground')
 def code_playground():
     """代码练习场"""
-    return render_template('tools/code_playground.html')
+    return render_template('code_playground.html')
 
 
 @tools_bp.route('/api/regex/test', methods=['POST'])

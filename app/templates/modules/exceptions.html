@@ -1,0 +1,107 @@
+<!-- 异常和断言模块内容 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-info-circle"></i> 模块介绍</h5>
+    </div>
+    <div class="card-body">
+        <p>异常处理是Python编程中的重要概念。本模块将介绍如何捕获和处理异常，以及断言的使用方法。</p>
+    </div>
+</div>
+
+<!-- 异常处理示例 -->
+<div class="card mb-4" id="exception-examples">
+    <div class="card-header">
+        <h5><i class="fas fa-exclamation-triangle text-warning"></i> 异常处理示例</h5>
+    </div>
+    <div class="card-body">
+        {% if module.exception_examples %}
+        <div class="row">
+            {% for example_id, example_data in module.exception_examples.items() %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-light">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{{ example_data.title }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <pre><code class="language-python">{{ example_data.code }}</code></pre>
+                        {% if example_data.description %}
+                        <p class="text-muted small">{{ example_data.description }}</p>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="executeCode('{{ example_data.code|e }}')">
+                            <i class="fas fa-play"></i> 运行代码
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 断言示例 -->
+<div class="card mb-4" id="assertion-examples">
+    <div class="card-header">
+        <h5><i class="fas fa-check-circle text-success"></i> 断言示例</h5>
+    </div>
+    <div class="card-body">
+        {% if module.assertion_examples %}
+        <div class="row">
+            {% for example_id, example_data in module.assertion_examples.items() %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-light">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">{{ example_data.title }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <pre><code class="language-python">{{ example_data.code }}</code></pre>
+                        {% if example_data.description %}
+                        <p class="text-muted small">{{ example_data.description }}</p>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="executeCode('{{ example_data.code|e }}')">
+                            <i class="fas fa-play"></i> 运行代码
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 代码执行区域 -->
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-code"></i> 代码练习</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>输入代码:</h6>
+                <textarea id="codeInput" class="form-control" rows="10" 
+                          placeholder="在这里输入Python代码..."># 异常处理示例
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    print("不能除以零!")
+
+# 断言示例
+age = 20
+assert age >= 18, "年龄必须大于等于18岁"
+print("年龄验证通过")</textarea>
+                <button class="btn btn-primary mt-2" onclick="executeUserCode()">
+                    <i class="fas fa-play"></i> 执行代码
+                </button>
+            </div>
+            <div class="col-md-6">
+                <h6>执行结果:</h6>
+                <div id="output" class="form-control" style="height: 200px; background-color: #f8f9fa; overflow-y: auto;">
+                    点击"执行代码"查看结果...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

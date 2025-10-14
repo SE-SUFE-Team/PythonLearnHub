@@ -343,10 +343,66 @@ function getCodeFromElement(button) {
 }
 
 /**
+ * 执行用户输入的代码
+ */
+function executeUserCode() {
+    console.log('🚀 executeUserCode 函数被调用');
+    
+    const codeInput = document.getElementById('codeInput');
+    const output = document.getElementById('output');
+    
+    console.log('📝 找到的元素:', {
+        codeInput: codeInput ? '存在' : '不存在',
+        output: output ? '存在' : '不存在'
+    });
+    
+    if (!codeInput) {
+        console.error('❌ 找不到代码输入框');
+        showNotification('找不到代码输入框', 'error');
+        return;
+    }
+    
+    const code = codeInput.value.trim();
+    console.log('📄 用户输入的代码:', code);
+    
+    if (!code) {
+        console.warn('⚠️ 代码为空');
+        showNotification('请输入要执行的代码', 'warning');
+        return;
+    }
+    
+    // 更新输出区域显示执行中状态
+    if (output) {
+        output.textContent = '执行中...';
+        output.style.color = '#6c757d';
+        console.log('🔄 更新输出区域显示执行中状态');
+    }
+    
+    // 创建临时按钮用于执行
+    const tempButton = document.createElement('button');
+    tempButton.style.display = 'none';
+    document.body.appendChild(tempButton);
+    
+    console.log('🎯 调用 executeCode 函数');
+    // 使用现有的executeCode函数
+    executeCode(code, tempButton, output);
+    
+    // 清理临时按钮
+    setTimeout(() => {
+        if (tempButton.parentNode) {
+            tempButton.parentNode.removeChild(tempButton);
+        }
+    }, 100);
+}
+
+/**
  * 执行Python代码
  */
 function executeCode(code, button, outputElement) {
+    console.log('🎯 executeCode 函数被调用', { code: code.substring(0, 50) + '...', button, outputElement });
+    
     if (!code || !code.trim()) {
+        console.warn('⚠️ executeCode: 代码为空');
         showNotification('请输入要执行的代码', 'warning');
         return;
     }
@@ -368,9 +424,15 @@ function executeCode(code, button, outputElement) {
     }
     
     // 显示执行中状态
-    if (output && output.querySelector('.output-content')) {
-        output.querySelector('.output-content').textContent = '执行中...';
-        output.style.display = 'block';
+    if (output) {
+        if (output.querySelector('.output-content')) {
+            output.querySelector('.output-content').textContent = '执行中...';
+            output.style.display = 'block';
+        } else {
+            // 处理简单的输出元素（如用户代码执行区域）
+            output.textContent = '执行中...';
+            output.style.color = '#6c757d';
+        }
     }
     
     const startTime = Date.now();
@@ -466,8 +528,17 @@ function displayExecutionResult(data, outputElement, executionTime) {
     const cardHeader = outputElement.querySelector('.card-header');
     
     if (data.success) {
-        outputContent.textContent = data.output || '(无输出)';
-        outputContent.className = 'output-content mb-0 text-success';
+        const result = data.output || '(无输出)';
+        
+        if (outputContent) {
+            // 处理复杂的输出元素（有.output-content的）
+            outputContent.textContent = result;
+            outputContent.className = 'output-content mb-0 text-success';
+        } else {
+            // 处理简单的输出元素（如用户代码执行区域）
+            outputElement.textContent = result;
+            outputElement.style.color = '#28a745';
+        }
         
         if (cardHeader) {
             cardHeader.innerHTML = `
@@ -486,10 +557,21 @@ function displayExecutionResult(data, outputElement, executionTime) {
             }
         }
         
-        outputElement.querySelector('.card').className = 'card border-success';
+        if (outputElement.querySelector('.card')) {
+            outputElement.querySelector('.card').className = 'card border-success';
+        }
     } else {
-        outputContent.textContent = data.error || '执行出错';
-        outputContent.className = 'output-content mb-0 text-danger';
+        const error = data.error || '执行出错';
+        
+        if (outputContent) {
+            // 处理复杂的输出元素
+            outputContent.textContent = error;
+            outputContent.className = 'output-content mb-0 text-danger';
+        } else {
+            // 处理简单的输出元素
+            outputElement.textContent = error;
+            outputElement.style.color = '#dc3545';
+        }
         
         if (cardHeader) {
             cardHeader.innerHTML = `
@@ -500,7 +582,9 @@ function displayExecutionResult(data, outputElement, executionTime) {
             `;
         }
         
-        outputElement.querySelector('.card').className = 'card border-danger';
+        if (outputElement.querySelector('.card')) {
+            outputElement.querySelector('.card').className = 'card border-danger';
+        }
     }
     
     outputElement.style.display = 'block';
@@ -518,8 +602,15 @@ function displayExecutionError(errorMessage, outputElement) {
     const outputContent = outputElement.querySelector('.output-content');
     const cardHeader = outputElement.querySelector('.card-header');
     
-    outputContent.textContent = errorMessage;
-    outputContent.className = 'output-content mb-0 text-danger';
+    if (outputContent) {
+        // 处理复杂的输出元素
+        outputContent.textContent = errorMessage;
+        outputContent.className = 'output-content mb-0 text-danger';
+    } else {
+        // 处理简单的输出元素
+        outputElement.textContent = errorMessage;
+        outputElement.style.color = '#dc3545';
+    }
     
     if (cardHeader) {
         cardHeader.innerHTML = `
@@ -529,7 +620,9 @@ function displayExecutionError(errorMessage, outputElement) {
         `;
     }
     
-    outputElement.querySelector('.card').className = 'card border-danger';
+    if (outputElement.querySelector('.card')) {
+        outputElement.querySelector('.card').className = 'card border-danger';
+    }
     outputElement.style.display = 'block';
 }
 
@@ -649,6 +742,7 @@ window.addEventListener('beforeunload', function() {
 // 导出到全局作用域
 window.PythonLearningPlatform.utils = {
     executeCode,
+    executeUserCode,
     showNotification,
     copyToClipboard,
     formatTime,
@@ -659,4 +753,26 @@ window.PythonLearningPlatform.utils = {
     toggleTheme
 };
 
+// 测试函数
+function testFunction() {
+    console.log('🧪 测试函数被调用');
+    alert('JavaScript 工作正常！');
+    
+    const codeInput = document.getElementById('codeInput');
+    const output = document.getElementById('output');
+    
+    if (output) {
+        output.textContent = '测试成功！JavaScript 正常工作。';
+        output.style.color = '#28a745';
+    }
+}
+
+// 直接导出到全局作用域以便模板调用
+window.executeUserCode = executeUserCode;
+window.executeCode = executeCode;
+window.testFunction = testFunction;
+
 console.log('📜 主JavaScript文件已加载');
+console.log('🔧 测试函数是否可用:');
+console.log('executeUserCode:', typeof window.executeUserCode);
+console.log('executeCode:', typeof window.executeCode);

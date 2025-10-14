@@ -294,7 +294,7 @@ function testRegex(pattern, testString, func, flags, replacement) {
         requestData.replacement = replacement;
     }
     
-    fetch('/api/regex/test', {
+    fetch('/tools/api/regex/test', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

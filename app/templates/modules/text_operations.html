@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}文本文件操作 - Python 学习平台{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                📝 Python 文本文件操作指南
+            </h1>
+            <p class="lead">掌握Python中文本文件的读写、处理和操作技巧</p>
+        </div>
+    </div>
+
+    <!-- 基础文件操作 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2><i class="fas fa-folder-open"></i> 基础文件操作</h2>
+            <div class="accordion" id="basicOperations">
+                
+                <!-- 文件读取 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="readFileHeader">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#readFile">
+                            <i class="fas fa-book-open me-2"></i> 文件读取方法
+                        </button>
+                    </h3>
+                    <div id="readFile" class="accordion-collapse collapse show" data-bs-parent="#basicOperations">
+                        <div class="accordion-body">
+                            <h5>1. 一次性读取全部内容</h5>
+                            <pre><code class="language-python"># 方法1: 使用 read()
+with open('file.txt', 'r', encoding='utf-8') as file:
+    content = file.read()
+    print(content)
+
+# 方法2: 使用 readlines()
+with open('file.txt', 'r', encoding='utf-8') as file:
+    lines = file.readlines()
+    for line in lines:
+        print(line.strip())  # strip() 去除换行符</code></pre>
+
+                            <h5 class="mt-4">2. 逐行读取（推荐用于大文件）</h5>
+                            <pre><code class="language-python"># 逐行读取，内存友好
+with open('large_file.txt', 'r', encoding='utf-8') as file:
+    for line in file:
+        # 处理每一行
+        print(line.strip())
+
+# 使用 readline() 手动控制
+with open('file.txt', 'r', encoding='utf-8') as file:
+    line = file.readline()
+    while line:
+        print(line.strip())
+        line = file.readline()</code></pre>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>提示:</strong> 使用 <code>with</code> 语句可以自动关闭文件，即使出现异常也能确保资源被正确释放。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文件写入 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="writeFileHeader">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#writeFile">
+                            <i class="fas fa-edit me-2"></i> 文件写入方法
+                        </button>
+                    </h3>
+                    <div id="writeFile" class="accordion-collapse collapse" data-bs-parent="#basicOperations">
+                        <div class="accordion-body">
+                            <h5>1. 覆盖写入</h5>
+                            <pre><code class="language-python"># 覆盖模式 'w' - 会清空原文件内容
+with open('output.txt', 'w', encoding='utf-8') as file:
+    file.write('Hello, World!\n')
+    file.write('这是第二行\n')
+
+# 写入多行
+lines = ['第一行\n', '第二行\n', '第三行\n']
+with open('output.txt', 'w', encoding='utf-8') as file:
+    file.writelines(lines)</code></pre>
+
+                            <h5 class="mt-4">2. 追加写入</h5>
+                            <pre><code class="language-python"># 追加模式 'a' - 在文件末尾添加内容
+with open('log.txt', 'a', encoding='utf-8') as file:
+    file.write('新的日志条目\n')
+
+# 追加多行
+new_lines = ['追加行1\n', '追加行2\n']
+with open('log.txt', 'a', encoding='utf-8') as file:
+    file.writelines(new_lines)</code></pre>
+
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>注意:</strong> 'w' 模式会清空文件原有内容，'a' 模式会在文件末尾追加内容。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 编码处理 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="encodingHeader">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#encoding">
+                            <i class="fas fa-language me-2"></i> 文件编码处理
+                        </button>
+                    </h3>
+                    <div id="encoding" class="accordion-collapse collapse" data-bs-parent="#basicOperations">
+                        <div class="accordion-body">
+                            <h5>常见编码格式</h5>
+                            <pre><code class="language-python"># UTF-8 编码（推荐）
+with open('utf8_file.txt', 'r', encoding='utf-8') as file:
+    content = file.read()
+
+# GBK 编码（中文Windows系统常用）
+with open('gbk_file.txt', 'r', encoding='gbk') as file:
+    content = file.read()
+
+# 自动检测编码
+import chardet
+
+def detect_encoding(file_path):
+    with open(file_path, 'rb') as file:
+        raw_data = file.read()
+        result = chardet.detect(raw_data)
+        return result['encoding']
+
+# 使用检测到的编码读取文件
+encoding = detect_encoding('unknown_encoding.txt')
+with open('unknown_encoding.txt', 'r', encoding=encoding) as file:
+    content = file.read()</code></pre>
+
+                            <h5 class="mt-4">编码转换</h5>
+                            <pre><code class="language-python"># 将GBK文件转换为UTF-8
+def convert_encoding(input_file, output_file, from_encoding='gbk', to_encoding='utf-8'):
+    with open(input_file, 'r', encoding=from_encoding) as infile:
+        content = infile.read()
+    
+    with open(output_file, 'w', encoding=to_encoding) as outfile:
+        outfile.write(content)
+
+# 使用示例
+convert_encoding('gbk_file.txt', 'utf8_file.txt')</code></pre>
+
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>最佳实践:</strong> 统一使用 UTF-8 编码，它支持所有Unicode字符且兼容性最好。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 高级文本处理 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2><i class="fas fa-cogs"></i> 高级文本处理技巧</h2>
+            <div class="accordion" id="advancedOperations">
+                
+                <!-- 大文件处理 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="largeFileHeader">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#largeFile">
+                            <i class="fas fa-database me-2"></i> 大文件处理策略
+                        </button>
+                    </h3>
+                    <div id="largeFile" class="accordion-collapse collapse show" data-bs-parent="#advancedOperations">
+                        <div class="accordion-body">
+                            <h5>分块读取大文件</h5>
+                            <pre><code class="language-python"># 分块读取，避免内存溢出
+def read_large_file_chunks(file_path, chunk_size=1024):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        while True:
+            chunk = file.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
+
+# 使用生成器处理大文件
+for chunk in read_large_file_chunks('very_large_file.txt'):
+    # 处理每个块
+    process_chunk(chunk)
+
+# 逐行处理大文件（推荐）
+def process_large_file_lines(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line_number, line in enumerate(file, 1):
+            # 处理每一行
+            processed_line = line.strip().upper()
+            print(f"Line {line_number}: {processed_line}")</code></pre>
+
+                            <h5 class="mt-4">内存友好的文件操作</h5>
+                            <pre><code class="language-python"># 统计大文件行数（不加载到内存）
+def count_lines(file_path):
+    count = 0
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            count += 1
+    return count
+
+# 搜索大文件中的特定内容
+def search_in_large_file(file_path, search_term):
+    matches = []
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line_number, line in enumerate(file, 1):
+            if search_term in line:
+                matches.append((line_number, line.strip()))
+    return matches</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文本清理 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header" id="textCleaningHeader">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#textCleaning">
+                            <i class="fas fa-broom me-2"></i> 文本清理和格式化
+                        </button>
+                    </h3>
+                    <div id="textCleaning" class="accordion-collapse collapse" data-bs-parent="#advancedOperations">
+                        <div class="accordion-body">
+                            <h5>常见文本清理操作</h5>
+                            <pre><code class="language-python">import re
+import string
+
+def clean_text(text):
+    """综合文本清理函数"""
+    # 1. 去除首尾空白
+    text = text.strip()
+    
+    # 2. 统一换行符
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    
+    # 3. 去除多余空白字符
+    text = re.sub(r'\s+', ' ', text)
+    
+    # 4. 去除特殊字符（可选）
+    text = re.sub(r'[^\w\s\u4e00-\u9fff]', '', text)
+    
+    return text
+
+# 文本标准化
+def normalize_text(text):
+    """文本标准化处理"""
+    # 转换为小写
+    text = text.lower()
+    
+    # 去除标点符号
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    
+    # 去除数字（可选）
+    text = re.sub(r'\d+', '', text)
+    
+    return text.strip()
+
+# 处理文件示例
+def clean_text_file(input_file, output_file):
+    with open(input_file, 'r', encoding='utf-8') as infile:
+        with open(output_file, 'w', encoding='utf-8') as outfile:
+            for line in infile:
+                cleaned_line = clean_text(line)
+                if cleaned_line:  # 跳过空行
+                    outfile.write(cleaned_line + '\n')</code></pre>
+
+                            <h5 class="mt-4">文本统计分析</h5>
+                            <pre><code class="language-python"># 文本统计功能
+def analyze_text_file(file_path):
+    """分析文本文件的基本统计信息"""
+    stats = {
+        'total_lines': 0,
+        'total_words': 0,
+        'total_chars': 0,
+        'empty_lines': 0,
+        'word_frequency': {}
+    }
+    
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            stats['total_lines'] += 1
+            
+            if line.strip() == '':
+                stats['empty_lines'] += 1
+                continue
+            
+            # 统计字符
+            stats['total_chars'] += len(line)
+            
+            # 统计单词
+            words = line.strip().split()
+            stats['total_words'] += len(words)
+            
+            # 词频统计
+            for word in words:
+                word = word.lower().strip(string.punctuation)
+                if word:
+                    stats['word_frequency'][word] = stats['word_frequency'].get(word, 0) + 1
+    
+    return stats
+
+# 使用示例
+stats = analyze_text_file('sample.txt')
+print(f"总行数: {stats['total_lines']}")
+print(f"总词数: {stats['total_words']}")
+print(f"总字符数: {stats['total_chars']}")
+
+# 显示最常见的10个词
+top_words = sorted(stats['word_frequency'].items(), key=lambda x: x[1], reverse=True)[:10]
+print("最常见的词:")
+for word, freq in top_words:
+    print(f"  {word}: {freq}")</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 实用示例 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2><i class="fas fa-code"></i> 实用代码示例</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <i class="fas fa-file-csv"></i> CSV文件处理
+                        </div>
+                        <div class="card-body">
+                            <pre><code class="language-python">import csv
+
+# 读取CSV文件
+def read_csv_file(file_path):
+    data = []
+    with open(file_path, 'r', encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            data.append(row)
+    return data
+
+# 写入CSV文件
+def write_csv_file(file_path, data, fieldnames):
+    with open(file_path, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <i class="fas fa-file-code"></i> JSON文件处理
+                        </div>
+                        <div class="card-body">
+                            <pre><code class="language-python">import json
+
+# 读取JSON文件
+def read_json_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    return data
+
+# 写入JSON文件
+def write_json_file(file_path, data):
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)
+
+# 美化JSON输出
+def pretty_print_json(data):
+    return json.dumps(data, ensure_ascii=False, indent=2)</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最佳实践 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0"><i class="fas fa-star"></i> 最佳实践总结</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-check text-success"></i> 推荐做法</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check-circle text-success"></i> 始终使用 <code>with</code> 语句操作文件</li>
+                                <li><i class="fas fa-check-circle text-success"></i> 明确指定文件编码（建议UTF-8）</li>
+                                <li><i class="fas fa-check-circle text-success"></i> 处理大文件时使用逐行读取</li>
+                                <li><i class="fas fa-check-circle text-success"></i> 添加异常处理机制</li>
+                                <li><i class="fas fa-check-circle text-success"></i> 使用有意义的变量名</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-times text-danger"></i> 避免的做法</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times-circle text-danger"></i> 忘记关闭文件句柄</li>
+                                <li><i class="fas fa-times-circle text-danger"></i> 一次性加载超大文件到内存</li>
+                                <li><i class="fas fa-times-circle text-danger"></i> 忽略文件编码问题</li>
+                                <li><i class="fas fa-times-circle text-danger"></i> 不处理文件操作异常</li>
+                                <li><i class="fas fa-times-circle text-danger"></i> 硬编码文件路径</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

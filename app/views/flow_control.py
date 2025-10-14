@@ -55,32 +55,6 @@ def get_example_code(topic_id, example_index):
         })
 
 
-@flow_control_bp.route('/api/execute', methods=['POST'])
-def execute_code():
-    """执行Python代码API"""
-    try:
-        data = request.get_json()
-        code = data.get('code', '')
-        inputs = data.get('inputs', None)  # 获取输入参数
-        
-        if not code.strip():
-            return jsonify({
-                'success': False,
-                'error': '代码不能为空'
-            })
-        
-        # 执行代码
-        result = executor.execute_code(code, inputs=inputs)
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'服务器错误: {str(e)}'
-        })
-
-
 @flow_control_bp.route('/api/topics')
 def get_topics():
     """获取所有知识点API"""

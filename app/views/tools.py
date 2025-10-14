@@ -89,33 +89,3 @@ def test_regex():
         return jsonify({'error': f'执行错误: {str(e)}'})
 
 
-@tools_bp.route('/api/execute', methods=['POST'])
-def execute_code():
-    """执行Python代码API"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'success': False,
-                'error': '无效的请求数据'
-            })
-        
-        code = data.get('code', '').strip()
-        inputs = data.get('inputs', None)
-        
-        if not code:
-            return jsonify({
-                'success': False,
-                'error': '代码不能为空'
-            })
-        
-        # 执行代码
-        result = executor.execute_code(code, inputs)
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'服务器错误: {str(e)}'
-        })

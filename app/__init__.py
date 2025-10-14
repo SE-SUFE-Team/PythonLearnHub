@@ -5,6 +5,7 @@ Python Learning Platform - Flask Application Factory
 
 from flask import Flask
 from config import Config
+from datetime import datetime
 
 
 def create_app(config_class=Config):
@@ -40,5 +41,15 @@ def create_app(config_class=Config):
     # 注册错误处理器
     from app.views.main import register_error_handlers
     register_error_handlers(app)
+    
+    # 全局上下文处理器
+    @app.context_processor
+    def inject_navigation():
+        """注入导航数据到所有模板"""
+        from app.utils.content_manager import MODULE_NAVIGATION
+        return dict(
+            navigation_modules=MODULE_NAVIGATION,
+            current_year=datetime.now().year
+        )
     
     return app

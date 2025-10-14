@@ -40,8 +40,9 @@
                     <div class="list-group list-group-flush">
                         {% if module_id == 'variables' %}
                             {% for topic_id, topic_data in module.topics.items() %}
-                            <a href="{{ url_for('main.topic_detail', module_id=module_id, topic_id=topic_id) }}" 
-                               class="list-group-item list-group-item-action">
+                            <a href="#topic-{{ topic_id }}" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="event.preventDefault(); document.getElementById('topic-{{ topic_id }}').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 {{ topic_data.title }}
                             </a>
@@ -50,7 +51,7 @@
                             {% for category_key, category_name in module.categories.items() %}
                             <a href="#category-{{ category_key }}" 
                                class="list-group-item list-group-item-action" 
-                               onclick="scrollToCategory('category-{{ category_key }}')">
+                               onclick="event.preventDefault(); document.getElementById('category-{{ category_key }}').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 {{ category_name }}
                             </a>
@@ -59,15 +60,16 @@
                             {% for example_id, example_data in module.examples.items() %}
                             <a href="#topic-{{ example_id }}" 
                                class="list-group-item list-group-item-action" 
-                               onclick="scrollToTopic('topic-{{ example_id }}')">
+                               onclick="event.preventDefault(); document.getElementById('topic-{{ example_id }}').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 {{ example_data.title }}
                             </a>
                             {% endfor %}
                         {% elif module_id == 'lists' %}
                             {% for topic_id, topic_data in module.topics.items() %}
-                            <a href="{{ url_for('main.topic_detail', module_id=module_id, topic_id=topic_id) }}" 
-                               class="list-group-item list-group-item-action">
+                            <a href="#topic-{{ topic_id }}" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="event.preventDefault(); document.getElementById('topic-{{ topic_id }}').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 {{ topic_data.title }}
                             </a>
@@ -77,7 +79,7 @@
                                 {% if topic_data.title %}
                                 <a href="#topic-{{ topic_id }}" 
                                    class="list-group-item list-group-item-action" 
-                                   onclick="scrollToTopic('topic-{{ topic_id }}')">
+                                   onclick="event.preventDefault(); document.getElementById('topic-{{ topic_id }}').scrollIntoView({behavior: 'smooth'});">
                                     <i class="fas fa-play-circle text-primary me-2"></i>
                                     {{ topic_data.title }}
                                 </a>
@@ -87,7 +89,7 @@
                             {% for example in module.examples %}
                             <a href="#example-{{ loop.index }}" 
                                class="list-group-item list-group-item-action" 
-                               onclick="scrollToExample('example-{{ loop.index }}')">
+                               onclick="event.preventDefault(); document.getElementById('example-{{ loop.index }}').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 {{ example.title }}
                             </a>
@@ -95,28 +97,50 @@
                         {% elif module_id == 'exceptions' %}
                             <a href="#exception-examples" 
                                class="list-group-item list-group-item-action" 
-                               onclick="scrollToSection('exception-examples')">
+                               onclick="event.preventDefault(); document.getElementById('exception-examples').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 异常处理示例
                             </a>
                             <a href="#assertion-examples" 
                                class="list-group-item list-group-item-action" 
-                               onclick="scrollToSection('assertion-examples')">
+                               onclick="event.preventDefault(); document.getElementById('assertion-examples').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 断言示例
                             </a>
                         {% elif module_id == 'files' %}
-                            <a href="{{ url_for('files.text_operations') }}" 
-                               class="list-group-item list-group-item-action">
+                            <a href="#files-text-operations" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="event.preventDefault(); document.getElementById('files-text-operations').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 文本操作
                             </a>
+                            {% if module.examples %}
+                                {% for example in module.examples %}
+                                <a href="#files-example-{{ loop.index }}" 
+                                   class="list-group-item list-group-item-action" 
+                                   onclick="event.preventDefault(); document.getElementById('files-example-{{ loop.index }}').scrollIntoView({behavior: 'smooth'});">
+                                    <i class="fas fa-play-circle text-primary me-2"></i>
+                                    {{ example.title }}
+                                </a>
+                                {% endfor %}
+                            {% endif %}
                         {% elif module_id == 'regex' %}
-                            <a href="{{ url_for('regex.test_regex') }}" 
-                               class="list-group-item list-group-item-action">
+                            <a href="#regex-test" 
+                               class="list-group-item list-group-item-action" 
+                               onclick="event.preventDefault(); document.getElementById('regex-test').scrollIntoView({behavior: 'smooth'});">
                                 <i class="fas fa-play-circle text-primary me-2"></i>
                                 正则表达式测试
                             </a>
+                            {% if module.examples %}
+                                {% for example in module.examples %}
+                                <a href="#regex-example-{{ loop.index }}" 
+                                   class="list-group-item list-group-item-action" 
+                                   onclick="event.preventDefault(); document.getElementById('regex-example-{{ loop.index }}').scrollIntoView({behavior: 'smooth'});">
+                                    <i class="fas fa-play-circle text-primary me-2"></i>
+                                    {{ example.title }}
+                                </a>
+                                {% endfor %}
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -158,32 +182,6 @@
 
 {% block extra_js %}
 <script>
-function scrollToTopic(topicId) {
-    const element = document.getElementById(topicId);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-function scrollToExample(exampleId) {
-    const element = document.getElementById(exampleId);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-function scrollToSection(sectionId) {
-    const element = document.getElementById(sectionId);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-function scrollToCategory(categoryId) {
-    const element = document.getElementById(categoryId);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-    }
-}
+// 所有滚动功能现在都使用内联JavaScript，这里不再需要额外的函数
 </script>
 {% endblock %}

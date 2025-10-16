@@ -90,6 +90,9 @@ dev_run() {
     print_message "🐍 Python学习平台启动中..." $GREEN
     print_message "📚 可通过以下 URL 访问你的平台:" $BLUE
     echo "   $PUBLIC_URL"
+    # 显示备用穿透链接
+    print_message "🔗 备用穿透链接 (ngrok):" $BLUE
+    echo "   https://frizzliest-raelyn-nonsubmissible.ngrok-free.dev/"
 
     # 启动 Flask 开发服务器，绑定所有地址
     flask run --host=0.0.0.0 --port=8000

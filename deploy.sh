@@ -79,11 +79,11 @@ dev_run() {
 
     # 获取在线 IDE 可用的公网地址
     if [ -n "$RUNWEB_HOST" ]; then
-        PUBLIC_URL="https://$RUNWEB_HOST:5555"
+        PUBLIC_URL="https://$RUNWEB_HOST:8000"
     elif [ -n "$C9_HOSTNAME" ]; then
-        PUBLIC_URL="https://$C9_HOSTNAME:5555"
+        PUBLIC_URL="https://$C9_HOSTNAME:8000"
     else
-        PUBLIC_URL="http://localhost:5555"
+        PUBLIC_URL="http://localhost:8000"
     fi
 
     # 显示可访问 URL

@@ -60,15 +60,41 @@ install_dependencies() {
     print_message "✅ 依赖安装完成" $GREEN
 }
 
+# # 本地开发环境
+# dev_run() {
+#     print_message "启动开发环境..." $YELLOW
+#     check_dependencies
+#     install_dependencies
+    
+#     print_message "🚀 启动Flask开发服务器..." $GREEN
+#     python app.py
+# }
 # 本地开发环境
 dev_run() {
     print_message "启动开发环境..." $YELLOW
     check_dependencies
     install_dependencies
-    
+
     print_message "🚀 启动Flask开发服务器..." $GREEN
-    python app.py
+
+    # 获取在线 IDE 可用的公网地址
+    if [ -n "$RUNWEB_HOST" ]; then
+        PUBLIC_URL="https://$RUNWEB_HOST:5555"
+    elif [ -n "$C9_HOSTNAME" ]; then
+        PUBLIC_URL="https://$C9_HOSTNAME:5555"
+    else
+        PUBLIC_URL="http://localhost:5555"
+    fi
+
+    # 显示可访问 URL
+    print_message "🐍 Python学习平台启动中..." $GREEN
+    print_message "📚 可通过以下 URL 访问你的平台:" $BLUE
+    echo "   $PUBLIC_URL"
+
+    # 启动 Flask 开发服务器，绑定所有地址
+    flask run --host=0.0.0.0 --port=5555
 }
+
 
 # 生产环境部署
 prod_deploy() {

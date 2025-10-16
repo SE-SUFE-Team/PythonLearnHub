@@ -92,7 +92,7 @@ dev_run() {
     echo "   $PUBLIC_URL"
 
     # 启动 Flask 开发服务器，绑定所有地址
-    flask run --host=0.0.0.0 --port=5555
+    flask run --host=0.0.0.0 --port=8000
 }
 
 
@@ -111,12 +111,12 @@ prod_deploy() {
     # 创建日志目录
     mkdir -p logs
     
-    # 启动Gunicorn
+    # 启动Gunicorn，绑定0.0.0.0:8000
     print_message "🚀 启动Gunicorn服务器..." $GREEN
-    gunicorn -c gunicorn.conf.py app:app --daemon
-    
+    gunicorn -w 4 -b 0.0.0.0:8000 app:app --daemon
+
     print_message "✅ 生产环境部署完成" $GREEN
-    print_message "访问地址: http://localhost:8000" $BLUE
+    print_message "访问地址: http://<你的公网IP>:8000" $BLUE
 }
 
 # Docker部署

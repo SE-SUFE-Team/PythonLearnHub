@@ -29,15 +29,13 @@
                 </h5>
             </div>
             <div class="card-body p-0">
-                <textarea id="code-editor" class="form-control font-monospace border-0" 
-                          style="resize: none; min-height: 400px; font-size: 14px;"
-                          placeholder="# 在这里编写您的Python代码&#10;print('Hello, Python!')"></textarea>
+                <div id="code-editor" style="min-height: 400px;"></div>
             </div>
             <div class="card-footer">
                 <button id="run-code" class="btn btn-success">
                     <i class="fas fa-play"></i> 运行代码
                 </button>
-                <button class="btn btn-outline-secondary" onclick="formatCode()">
+                <button id="format-code" class="btn btn-outline-secondary">
                     <i class="fas fa-magic"></i> 格式化
                 </button>
             </div>
@@ -120,14 +118,27 @@
     line-height: 1.4;
 }
 
-#code-editor {
-    font-family: 'Courier New', monospace;
+/* CodeMirror 编辑器样式 */
+.CodeMirror {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
     line-height: 1.4;
+    height: 400px;
+    border: none;
+    border-radius: 0;
 }
 
-#code-editor:focus {
+.CodeMirror-focused {
     box-shadow: none;
-    border-color: #ced4da;
+}
+
+.CodeMirror-lines {
+    padding: 10px;
+}
+
+.CodeMirror-placeholder {
+    color: #999;
+    font-style: italic;
 }
 
 .loading-spinner {
@@ -158,16 +169,36 @@
 {% block extra_js %}
 <script>
 let executionHistory = [];
+let codeMirrorEditor;
 
 document.addEventListener('DOMContentLoaded', function() {
     const runButton = document.getElementById('run-code');
-    const codeEditor = document.getElementById('code-editor');
+    const codeEditorElement = document.getElementById('code-editor');
     const outputArea = document.getElementById('output-area');
     const executionInfo = document.getElementById('execution-info');
     const variablesInfo = document.getElementById('variables-info');
     
+    // 初始化 CodeMirror 编辑器
+    codeMirrorEditor = CodeMirror(codeEditorElement, {
+        mode: 'python',
+        theme: 'monokai',
+        lineNumbers: true,
+        indentUnit: 4,
+        tabSize: 4,
+        indentWithTabs: false,
+        lineWrapping: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        placeholder: "# 在这里编写您的Python代码\nprint('Hello, Python!')",
+        extraKeys: {
+            "Ctrl-Enter": function(cm) {
+                document.getElementById('run-code').click();
+            }
+        }
+    });
+    
     runButton.addEventListener('click', function() {
-        const code = codeEditor.value.trim();
+        const code = codeMirrorEditor.getValue().trim();
         
         if (!code) {
             showError('请先输入代码');
@@ -177,13 +208,12 @@ document.addEventListener('DOMContentLoaded', function() {
         executeCode(code);
     });
     
-    // Keyboard shortcut: Ctrl+Enter to run code
-    codeEditor.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.key === 'Enter') {
-            e.preventDefault();
-            document.getElementById('run-code').click();
-        }
+    // Format code button
+    document.getElementById('format-code').addEventListener('click', function() {
+        formatCode();
     });
+    
+    // Keyboard shortcut: Ctrl+Enter to run code (已在 CodeMirror 配置中处理)
     
     function executeCode(code) {
         const runButton = document.getElementById('run-code');
@@ -277,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Example code loading
 function loadExample(type) {
-    const codeEditor = document.getElementById('code-editor');
     
     const examples = {
         'hello_world': `# Hello World 示例
@@ -326,14 +355,14 @@ print(f"平方数: {squares}")`
     };
     
     if (examples[type]) {
-        codeEditor.value = examples[type];
-        codeEditor.focus();
+        codeMirrorEditor.setValue(examples[type]);
+        codeMirrorEditor.focus();
     }
 }
 
 function clearCode() {
-    document.getElementById('code-editor').value = '';
-    document.getElementById('code-editor').focus();
+    codeMirrorEditor.setValue('');
+    codeMirrorEditor.focus();
 }
 
 function clearOutput() {
@@ -344,8 +373,7 @@ function clearOutput() {
 }
 
 function formatCode() {
-    const codeEditor = document.getElementById('code-editor');
-    const code = codeEditor.value;
+    const code = codeMirrorEditor.getValue();
     
     // Simple code formatting (basic indentation fix)
     const lines = code.split('\n');
@@ -381,7 +409,7 @@ function formatCode() {
         }
     });
     
-    codeEditor.value = formattedLines.join('\n');
+    codeMirrorEditor.setValue(formattedLines.join('\n'));
 }
 </script>
 {% endblock %}

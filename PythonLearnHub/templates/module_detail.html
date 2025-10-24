@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% block title %}{{ module_info.title }} - Python学习平台{% endblock %}
+
+{% block content %}
+<!-- Module Header -->
+<div class="module-header bg-light rounded p-4 mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-3">
+                <span class="module-icon fs-1 me-3">{{ module_info.icon }}</span>
+                <div>
+                    <h1 class="mb-1">{{ module_info.title }}</h1>
+                    <p class="text-muted mb-0">{{ module_info.description }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <span
+                class="badge bg-{{ 'success' if module_info.difficulty == '入门' else 'primary' if module_info.difficulty == '基础' else 'warning' if module_info.difficulty == '中级' else 'danger' }} fs-6">
+                {{ module_info.difficulty }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">首页</a></li>
+        <li class="breadcrumb-item active">{{ module_info.title }}</li>
+    </ol>
+</nav>
+
+{% if module.get('topics') %}
+<!-- Topics Section -->
+<div class="row">
+    <div class="col-lg-3 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-list"></i> 学习主题</h6>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for topic_id, topic_data in module.topics.items() %}
+                <a href="#topic-{{ topic_id }}" class="list-group-item list-group-item-action topic-nav-link">
+                    {{ topic_data.title }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        {% for topic_id, topic_data in module.topics.items() %}
+        <div id="topic-{{ topic_id }}" class="topic-section mb-5">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ topic_data.title }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if topic_data.get('examples') %}
+                    <div class="examples-container">
+                        {% for example in topic_data.examples %}
+                        <div class="example-item mb-4">
+                            <div class="example-header d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">{{ example.title }}</h6>
+                                <button class="btn btn-sm btn-outline-primary run-code-btn"
+                                    data-code="{{ example.code | e }}">
+                                    <i class="fas fa-play"></i> 运行
+                                </button>
+                            </div>
+
+                            {% if example.description %}
+                            <p class="text-muted small mb-3">{{ example.description }}</p>
+                            {% endif %}
+
+                            <div class="code-container">
+                                <pre><code class="language-python">{{ example.code }}</code></pre>
+                            </div>
+
+                            <div class="code-output mt-3" style="display: none;">
+                                <div class="card border-success">
+                                    <div class="card-header bg-light">
+                                        <small class="text-muted">
+                                            <i class="fas fa-terminal"></i> 执行结果
+                                        </small>
+                                    </div>
+                                    <div class="card-body">
+                                        <pre class="output-content mb-0"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% elif module.get('examples') %}
+<!-- Direct Examples Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-code"></i> 示例代码</h4>
+            </div>
+            <div class="card-body">
+                {% if module.examples is mapping %}
+                {% for example_key, example_data in module.examples.items() %}
+                <div class="example-item mb-4">
+                    <div class="example-header d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">{{ example_data.get('title', example_key) }}</h6>
+                        <button class="btn btn-sm btn-outline-primary run-code-btn"
+                            data-code="{{ example_data.code | e }}">
+                            <i class="fas fa-play"></i> 运行
+                        </button>
+                    </div>
+
+                    {% if example_data.get('description') %}
+                    <p class="text-muted small mb-3">{{ example_data.description }}</p>
+                    {% endif %}
+
+                    <div class="code-container">
+                        <pre><code class="language-python">{{ example_data.code }}</code></pre>
+                    </div>
+
+                    <div class="code-output mt-3" style="display: none;">
+                        <div class="card border-success">
+                            <div class="card-header bg-light">
+                                <small class="text-muted">
+                                    <i class="fas fa-terminal"></i> 执行结果
+                                </small>
+                            </div>
+                            <div class="card-body">
+                                <pre class="output-content mb-0"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                {% for example in module.examples %}
+                <div class="example-item mb-4">
+                    <div class="example-header d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">{{ example.title }}</h6>
+                        <button class="btn btn-sm btn-outline-primary run-code-btn" data-code="{{ example.code | e }}">
+                            <i class="fas fa-play"></i> 运行
+                        </button>
+                    </div>
+
+                    {% if example.description %}
+                    <p class="text-muted small mb-3">{{ example.description }}</p>
+                    {% endif %}
+
+                    <div class="code-container">
+                        <pre><code class="language-python">{{ example.code }}</code></pre>
+                    </div>
+
+                    <div class="code-output mt-3" style="display: none;">
+                        <div class="card border-success">
+                            <div class="card-header bg-light">
+                                <small class="text-muted">
+                                    <i class="fas fa-terminal"></i> 执行结果
+                                </small>
+                            </div>
+                            <div class="card-body">
+                                <pre class="output-content mb-0"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Code Playground Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-code"></i> 代码练习区
+                    <small class="text-muted">- 在这里编写和测试您的代码</small>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="user-code" class="form-label">输入Python代码:</label>
+                        <div id="user-code-container" class="code-editor-container">
+                            <div id="user-code"></div>
+                        </div>
+                        <div class="mt-3">
+                            <button id="run-user-code" class="btn btn-success">
+                                <i class="fas fa-play"></i> 运行代码
+                            </button>
+                            <button id="format-code" class="btn btn-outline-secondary">
+                                <i class="fas fa-code"></i> 格式化
+                            </button>
+                            <button id="clear-code" class="btn btn-outline-secondary">
+                                <i class="fas fa-trash"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">执行结果:</label>
+                        <div id="user-output" class="code-output-area bg-dark text-light p-3 rounded">
+                            <pre class="mb-0">点击"运行代码"查看结果...</pre>
+                        </div>
+                        <div id="execution-info" class="mt-2 small text-muted"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Module Navigation -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between">
+            <div>
+                {% set current_index = navigation_modules|selectattr('id', 'equalto', module_id)|list|first %}
+                {% if current_index %}
+                {% set current_idx = navigation_modules.index(current_index) %}
+                {% if current_idx > 0 %}
+                {% set prev_module = navigation_modules[current_idx - 1] %}
+                <a href="{{ url_for('module_detail', module_id=prev_module.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-chevron-left"></i> {{ prev_module.title }}
+                </a>
+                {% endif %}
+                {% endif %}
+            </div>
+            <div>
+                {% if current_index and current_idx < (navigation_modules|length - 1) %} {% set
+                    next_module=navigation_modules[current_idx + 1] %} <a
+                    href="{{ url_for('module_detail', module_id=next_module.id) }}" class="btn btn-outline-primary">
+                    {{ next_module.title }} <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copyright Notice for Module -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-light border-primary text-center">
+            <small class="text-muted">
+                <i class="fas fa-university"></i>
+                本学习模块内容版权归 <strong>相关机构</strong> 所有
+                | 仅供教学和学习使用
+            </small>
+        </div>
+    </div>
+</div>
+
+<style>
+    .topic-nav-link.active {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+
+    .code-container {
+        position: relative;
+    }
+
+    .code-container pre {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin: 0;
+    }
+
+    .code-output-area {
+        min-height: 200px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .example-item {
+        border-left: 4px solid var(--bs-primary);
+        padding-left: 1rem;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid var(--bs-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* CodeMirror 编辑器样式 */
+    .code-editor-container {
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        background-color: #f8f9fa;
+        position: relative;
+        min-height: 200px;
+    }
+
+    .code-editor-container .CodeMirror {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.4;
+        height: 200px;
+        border: none;
+        border-radius: 0;
+        background: #272822 !important;
+        color: #f8f8f2 !important;
+    }
+
+    .code-editor-container .CodeMirror-focused {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .code-editor-container .CodeMirror-lines {
+        padding: 10px;
+    }
+
+    .code-editor-container .CodeMirror-placeholder {
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    /* CodeMirror 文本颜色覆盖 */
+    .code-editor-container .CodeMirror-lines {
+        color: #f8f8f2 !important;
+    }
+
+    .code-editor-container .CodeMirror-cursor {
+        border-left: 1px solid #f8f8f2 !important;
+    }
+
+    .code-editor-container .CodeMirror-selected {
+        background: #49483e !important;
+    }
+
+    .code-editor-container .CodeMirror-line::selection,
+    .code-editor-container .CodeMirror-line > span::selection,
+    .code-editor-container .CodeMirror-line > span > span::selection {
+        background: #49483e !important;
+    }
+
+    /* 主题导航样式 */
+    .topic-nav-link {
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.25rem;
+        border-radius: 0.25rem;
+        text-decoration: none;
+        color: #495057;
+        display: block;
+    }
+
+    .topic-nav-link:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        border-left-color: #007bff;
+        color: #007bff;
+    }
+
+    .topic-nav-link.active {
+        background-color: #007bff;
+        color: white;
+        border-left-color: #007bff;
+    }
+
+    /* 示例代码样式 */
+    .example-item {
+        border-left: 4px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 2rem;
+        background: rgba(0, 123, 255, 0.02);
+        border-radius: 0 0.375rem 0.375rem 0;
+        padding: 1rem;
+    }
+
+    .example-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .example-item h6 {
+        color: #007bff;
+        font-weight: 600;
+    }
+
+    /* 代码输出区域 */
+    .code-output {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .output-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    /* 加载动画 */
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Smooth scroll for topic navigation
+        document.querySelectorAll('.topic-nav-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+
+                    // Update active state
+                    document.querySelectorAll('.topic-nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        // Code execution for example codes
+        document.querySelectorAll('.run-code-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const code = this.getAttribute('data-code');
+                const outputContainer = this.closest('.example-item').querySelector('.code-output');
+                const outputContent = outputContainer.querySelector('.output-content');
+
+                executeCode(code, outputContent, outputContainer, this);
+            });
+        });
+
+    // 初始化 CodeMirror 编辑器
+    const userCodeEditorElement = document.getElementById('user-code');
+    let userCodeMirrorEditor;
+    
+    // 等待 CodeMirror 加载完成后初始化
+    function initializeCodeMirror() {
+        userCodeMirrorEditor = CodeMirror(userCodeEditorElement, {
+            mode: 'python',
+            theme: 'monokai',
+            lineNumbers: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            lineWrapping: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            placeholder: "# 在此输入您的Python代码\nprint('Hello, Python!')",
+            extraKeys: {
+                "Ctrl-Enter": function(cm) {
+                    document.getElementById('run-user-code').click();
+                }
+            }
+        });
+        
+        // CodeMirror 初始化完成后绑定事件
+        bindEditorEvents();
+    }
+    
+    if (typeof CodeMirror !== 'undefined') {
+        initializeCodeMirror();
+    } else {
+        // 如果 CodeMirror 未加载，等待加载
+        const checkCodeMirror = setInterval(() => {
+            if (typeof CodeMirror !== 'undefined') {
+                clearInterval(checkCodeMirror);
+                initializeCodeMirror();
+            }
+        }, 100);
+    }
+
+    // 绑定编辑器事件
+    function bindEditorEvents() {
+        // User code execution
+        document.getElementById('run-user-code').addEventListener('click', function () {
+            const code = userCodeMirrorEditor ? userCodeMirrorEditor.getValue() : '';
+            const outputArea = document.getElementById('user-output').querySelector('pre');
+            const infoArea = document.getElementById('execution-info');
+
+            if (!code.trim()) {
+                outputArea.textContent = '请先输入代码...';
+                return;
+            }
+
+            executeCode(code, outputArea, null, this, infoArea);
+        });
+
+        // Format code
+        document.getElementById('format-code').addEventListener('click', function () {
+            if (userCodeMirrorEditor) {
+                formatCode();
+            }
+        });
+
+        // Clear code
+        document.getElementById('clear-code').addEventListener('click', function () {
+            if (userCodeMirrorEditor) {
+                userCodeMirrorEditor.setValue('');
+                userCodeMirrorEditor.focus();
+            }
+            document.getElementById('user-output').querySelector('pre').textContent = '点击"运行代码"查看结果...';
+            document.getElementById('execution-info').textContent = '';
+        });
+    }
+
+    // 格式化代码函数
+    function formatCode() {
+        if (!userCodeMirrorEditor) return;
+        
+        const code = userCodeMirrorEditor.getValue();
+        
+        // Simple code formatting (basic indentation fix)
+        const lines = code.split('\n');
+        let indentLevel = 0;
+        const formattedLines = [];
+        
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed) {
+                formattedLines.push('');
+                return;
+            }
+            
+            // Decrease indent for 'else', 'elif', 'except', 'finally'
+            if (trimmed.startsWith('else') || trimmed.startsWith('elif') || 
+                trimmed.startsWith('except') || trimmed.startsWith('finally')) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+            
+            // Add current line with proper indentation
+            formattedLines.push('    '.repeat(indentLevel) + trimmed);
+            
+            // Increase indent after ':' (function, class, if, for, etc.)
+            if (trimmed.endsWith(':')) {
+                indentLevel++;
+            }
+            
+            // Reset indent for top-level statements
+            if (!trimmed.startsWith(' ') && !trimmed.endsWith(':') && 
+                !trimmed.startsWith('else') && !trimmed.startsWith('elif') && 
+                !trimmed.startsWith('except') && !trimmed.startsWith('finally')) {
+                indentLevel = 0;
+            }
+        });
+        
+        userCodeMirrorEditor.setValue(formattedLines.join('\n'));
+    }
+    });
+
+    function executeCode(code, outputElement, outputContainer, button, infoElement) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="loading-spinner"></span> 执行中...';
+        button.disabled = true;
+
+        if (outputContainer) {
+            outputContainer.style.display = 'block';
+        }
+
+        outputElement.textContent = '执行中...';
+
+        fetch('/api/execute', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code: code })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    outputElement.textContent = data.output || '(无输出)';
+                    if (infoElement) {
+                        infoElement.innerHTML = `<i class="fas fa-check text-success"></i> 执行成功 (耗时: ${data.execution_time}s)`;
+                        if (Object.keys(data.variables || {}).length > 0) {
+                            infoElement.innerHTML += ` | 变量: ${Object.keys(data.variables).join(', ')}`;
+                        }
+                    }
+                } else {
+                    outputElement.textContent = `错误: ${data.error}`;
+                    if (infoElement) {
+                        infoElement.innerHTML = `<i class="fas fa-times text-danger"></i> 执行失败`;
+                    }
+                }
+            })
+            .catch(error => {
+                outputElement.textContent = `网络错误: ${error.message}`;
+                if (infoElement) {
+                    infoElement.innerHTML = `<i class="fas fa-times text-danger"></i> 网络错误`;
+                }
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,8 @@
+# 虚拟环境
+myvenv/
+venv/
+.env
+
+__pycache__/
+*.pyc
+.DS_Store

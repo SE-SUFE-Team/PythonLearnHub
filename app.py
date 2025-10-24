@@ -351,12 +351,13 @@ def inject_navigation():
 
 # ======================== 启动应用 ========================
 
+# 启动信息（只执行一次）
+print("🐍 Python学习平台启动中...")
+print("📚 访问 http://localhost:5555 开始学习")
+print("🔒 安全代码执行环境已启用")
+print("📖 包含以下学习模块:")
+for module in MODULE_NAVIGATION:
+    print(f"   {module['icon']} {module['title']} - {module['difficulty']}")
+
 if __name__ == '__main__':
-    print("🐍 Python学习平台启动中...")
-    print("📚 访问 http://localhost:5555 开始学习")
-    print("🔒 安全代码执行环境已启用")
-    print("📖 包含以下学习模块:")
-    for module in MODULE_NAVIGATION:
-        print(f"   {module['icon']} {module['title']} - {module['difficulty']}")
-    
     app.run(debug=True, host='0.0.0.0', port=5555)

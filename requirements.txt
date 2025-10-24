@@ -9,4 +9,4 @@ click==8.1.7
 blinker==1.6.3
 importlib-metadata==6.8.0
 zipp==3.17.0
-SQLAlchemy==2.0.44
+SQLAlchemy

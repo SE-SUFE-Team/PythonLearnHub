@@ -6,15 +6,15 @@
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="text-center mb-5">
-            <h1 class="display-4">🐍 Python学习平台</h1>
+            <h1 class="display-4">Python学习平台</h1>
             <p class="lead text-muted">一个集成的Python学习环境</p>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-body">
                 <h3><i class="fas fa-info-circle"></i> 平台介绍</h3>
                 <p>Python学习平台是一个专为Python学习者设计的综合性Web应用。它整合了多个核心学习模块，提供安全的代码执行环境和丰富的示例代码，帮助学习者系统地掌握Python编程知识。</p>
-                
+
                 <h4>主要特色</h4>
                 <ul class="list-unstyled">
                     <li class="mb-2">
@@ -36,7 +36,7 @@
                 </ul>
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-body">
                 <h3><i class="fas fa-graduation-cap"></i> 学习模块</h3>
@@ -47,13 +47,15 @@
                             <span class="fs-4 me-3">{{ module.icon }}</span>
                             <div>
                                 <h6 class="mb-1">
-                                    <a href="{{ url_for('module_detail', module_id=module.id) }}" class="text-decoration-none">
+                                    <a href="{{ url_for('module_detail', module_id=module.id) }}"
+                                        class="text-decoration-none">
                                         {{ module.title }}
                                     </a>
                                 </h6>
                                 <small class="text-muted">{{ module.description }}</small>
                                 <br>
-                                <span class="badge bg-{{ 'success' if module.difficulty == '入门' else 'primary' if module.difficulty == '基础' else 'warning' if module.difficulty == '中级' else 'danger' }} badge-sm">
+                                <span
+                                    class="badge bg-{{ 'success' if module.difficulty == '入门' else 'primary' if module.difficulty == '基础' else 'warning' if module.difficulty == '中级' else 'danger' }} badge-sm">
                                     {{ module.difficulty }}
                                 </span>
                             </div>
@@ -63,7 +65,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-body">
                 <h3><i class="fas fa-tools"></i> 工具集</h3>
@@ -97,7 +99,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-body">
                 <h3><i class="fas fa-cog"></i> 技术实现</h3>
@@ -111,28 +113,28 @@
                 </ul>
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-body">
                 <h3><i class="fas fa-question-circle"></i> 使用说明</h3>
-                
+
                 <h5>1. 浏览学习模块</h5>
                 <p>点击导航栏的"学习模块"或首页的模块卡片，可以访问各个学习主题。每个模块都包含详细的知识点介绍和示例代码。</p>
-                
+
                 <h5>2. 运行示例代码</h5>
                 <p>在模块页面中，点击示例代码旁的"运行"按钮，可以直接执行代码并查看结果。代码在安全的沙箱环境中执行。</p>
-                
+
                 <h5>3. 使用代码练习场</h5>
                 <p>在代码练习场中，您可以自由编写Python代码进行练习。支持快捷键 Ctrl+Enter 执行代码。</p>
-                
+
                 <h5>4. 测试正则表达式</h5>
                 <p>使用正则表达式工具可以测试各种正则模式，支持多种匹配函数和标志位。</p>
-                
+
                 <h5>5. 搜索功能</h5>
                 <p>使用顶部搜索框可以快速查找相关的学习内容和示例代码。</p>
             </div>
         </div>
-        
+
         <div class="card">
             <div class="card-body">
                 <h3><i class="fas fa-exclamation-triangle"></i> 安全说明</h3>
@@ -147,14 +149,14 @@
                         <li>支持 math, re 等常用模块</li>
                     </ul>
                 </div>
-                
+
                 <div class="alert alert-info">
                     <h6><i class="fas fa-info-circle"></i> 学习建议</h6>
                     <p class="mb-0">建议按照从基础到高级的顺序学习，每个模块都提供了丰富的示例代码。通过实际编写和运行代码，可以更好地理解Python编程概念。</p>
                 </div>
             </div>
         </div>
-        
+
         <!-- 版权声明区域 -->
         <div class="card border-primary mb-4">
             <div class="card-header bg-primary text-white">
@@ -164,10 +166,10 @@
             </div>
             <div class="card-body">
                 <div class="text-center mb-4">
-                    <h4 class="text-primary mb-3">相关机构</h4>
+                    <h4 class="text-primary mb-3">复旦大学计算与智能创新学院</h4>
                     <p class="lead mb-3">Fudan University School of Computing and Intelligence</p>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-8 mx-auto">
                         <div class="alert alert-info">
@@ -179,30 +181,30 @@
                                 <li>界面设计和交互逻辑</li>
                                 <li>学习路径和教学方法</li>
                             </ul>
-                            <p class="mb-0"><strong>版权归相关机构所有</strong></p>
+                            <p class="mb-0"><strong>版权归复旦大学计算与智能创新学院所有</strong></p>
                         </div>
-                        
+
                         <div class="alert alert-warning">
                             <h6><i class="fas fa-exclamation-triangle"></i> 使用声明</h6>
                             <ul class="mb-0">
                                 <li>本平台仅供教学和学习使用</li>
                                 <li>严禁用于任何商业目的</li>
                                 <li>未经授权不得复制、分发或修改平台内容</li>
-                                <li>如有问题请联系相关机构</li>
+                                <li>如有问题请联系复旦大学计算与智能创新学院</li>
                             </ul>
                         </div>
-                        
+
                         <div class="text-center mt-4">
                             <p class="text-muted">
                                 <i class="fas fa-calendar-alt"></i>
-                                &copy; {{ current_year }} 相关机构 保留所有权利
+                                &copy; {{ current_year }} 复旦大学计算与智能创新学院 保留所有权利
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="text-center mt-4">
             <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
                 <i class="fas fa-arrow-left"></i> 返回首页

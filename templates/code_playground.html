@@ -41,7 +41,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-lg-6 mb-4">
         <div class="card h-100">
             <div class="card-header">
@@ -101,7 +101,7 @@
         <div class="alert alert-light border-primary text-center">
             <small class="text-muted">
                 <i class="fas fa-university"></i>
-                代码练习场工具版权归 <strong>相关机构</strong> 所有
+                代码练习场工具版权归 <strong>复旦大学计算与智能创新学院</strong> 所有
                 | 仅供教学和学习使用
             </small>
         </div>
@@ -109,207 +109,212 @@
 </div>
 
 <style>
-.code-output-area {
-    min-height: 350px;
-    max-height: 400px;
-    overflow-y: auto;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    line-height: 1.4;
-}
+    .code-output-area {
+        min-height: 350px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.4;
+    }
 
-/* CodeMirror 编辑器样式 */
-.CodeMirror {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.4;
-    height: 400px;
-    border: none;
-    border-radius: 0;
-}
+    /* CodeMirror 编辑器样式 */
+    .CodeMirror {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.4;
+        height: 400px;
+        border: none;
+        border-radius: 0;
+    }
 
-.CodeMirror-focused {
-    box-shadow: none;
-}
+    .CodeMirror-focused {
+        box-shadow: none;
+    }
 
-.CodeMirror-lines {
-    padding: 10px;
-}
+    .CodeMirror-lines {
+        padding: 10px;
+    }
 
-.CodeMirror-placeholder {
-    color: #999;
-    font-style: italic;
-}
+    .CodeMirror-placeholder {
+        color: #999;
+        font-style: italic;
+    }
 
-.loading-spinner {
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid var(--bs-success);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid var(--success-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
 
-.error-output {
-    color: #ff6b6b;
-}
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 
-.success-output {
-    color: #51cf66;
-}
+    .error-output {
+        color: #ff6b6b;
+    }
+
+    .success-output {
+        color: #51cf66;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let executionHistory = [];
-let codeMirrorEditor;
+    let executionHistory = [];
+    let codeMirrorEditor;
 
-document.addEventListener('DOMContentLoaded', function() {
-    const runButton = document.getElementById('run-code');
-    const codeEditorElement = document.getElementById('code-editor');
-    const outputArea = document.getElementById('output-area');
-    const executionInfo = document.getElementById('execution-info');
-    const variablesInfo = document.getElementById('variables-info');
-    
-    // 初始化 CodeMirror 编辑器
-    codeMirrorEditor = CodeMirror(codeEditorElement, {
-        mode: 'python',
-        theme: 'monokai',
-        lineNumbers: true,
-        indentUnit: 4,
-        tabSize: 4,
-        indentWithTabs: false,
-        lineWrapping: true,
-        autoCloseBrackets: true,
-        matchBrackets: true,
-        placeholder: "# 在这里编写您的Python代码\nprint('Hello, Python!')",
-        extraKeys: {
-            "Ctrl-Enter": function(cm) {
-                document.getElementById('run-code').click();
-            }
-        }
-    });
-    
-    runButton.addEventListener('click', function() {
-        const code = codeMirrorEditor.getValue().trim();
-        
-        if (!code) {
-            showError('请先输入代码');
-            return;
-        }
-        
-        executeCode(code);
-    });
-    
-    // Format code button
-    document.getElementById('format-code').addEventListener('click', function() {
-        formatCode();
-    });
-    
-    // Keyboard shortcut: Ctrl+Enter to run code (已在 CodeMirror 配置中处理)
-    
-    function executeCode(code) {
+    document.addEventListener('DOMContentLoaded', function () {
         const runButton = document.getElementById('run-code');
-        const originalText = runButton.innerHTML;
-        
-        runButton.innerHTML = '<span class="loading-spinner"></span> 执行中...';
-        runButton.disabled = true;
-        
-        outputArea.querySelector('pre').textContent = '执行中...';
-        executionInfo.innerHTML = '<i class="fas fa-clock text-warning"></i> 执行中...';
-        
-        const startTime = Date.now();
-        
-        fetch('/api/execute', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code: code })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const executionTime = ((Date.now() - startTime) / 1000).toFixed(3);
-            
-            if (data.success) {
-                showSuccess(data.output || '(无输出)', data, executionTime);
-                
-                // Add to history
-                executionHistory.push({
-                    code: code,
-                    output: data.output,
-                    timestamp: new Date().toLocaleString(),
-                    success: true
-                });
-            } else {
-                showError(data.error, executionTime);
-                
-                // Add to history
-                executionHistory.push({
-                    code: code,
-                    error: data.error,
-                    timestamp: new Date().toLocaleString(),
-                    success: false
-                });
+        const codeEditorElement = document.getElementById('code-editor');
+        const outputArea = document.getElementById('output-area');
+        const executionInfo = document.getElementById('execution-info');
+        const variablesInfo = document.getElementById('variables-info');
+
+        // 初始化 CodeMirror 编辑器
+        codeMirrorEditor = CodeMirror(codeEditorElement, {
+            mode: 'python',
+            theme: 'monokai',
+            lineNumbers: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            lineWrapping: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            placeholder: "# 在这里编写您的Python代码\nprint('Hello, Python!')",
+            extraKeys: {
+                "Ctrl-Enter": function (cm) {
+                    document.getElementById('run-code').click();
+                }
             }
-        })
-        .catch(error => {
-            const executionTime = ((Date.now() - startTime) / 1000).toFixed(3);
-            showError(`网络错误: ${error.message}`, executionTime);
-        })
-        .finally(() => {
-            runButton.innerHTML = originalText;
-            runButton.disabled = false;
         });
-    }
-    
-    function showSuccess(output, data, executionTime) {
-        outputArea.querySelector('pre').textContent = output;
-        outputArea.querySelector('pre').className = 'mb-0 success-output';
-        
-        executionInfo.innerHTML = `
+
+        runButton.addEventListener('click', function () {
+            const code = codeMirrorEditor.getValue().trim();
+
+            if (!code) {
+                showError('请先输入代码');
+                return;
+            }
+
+            executeCode(code);
+        });
+
+        // Format code button
+        document.getElementById('format-code').addEventListener('click', function () {
+            formatCode();
+        });
+
+        // Keyboard shortcut: Ctrl+Enter to run code (已在 CodeMirror 配置中处理)
+
+        function executeCode(code) {
+            const runButton = document.getElementById('run-code');
+            const originalText = runButton.innerHTML;
+
+            runButton.innerHTML = '<span class="loading-spinner"></span> 执行中...';
+            runButton.disabled = true;
+
+            outputArea.querySelector('pre').textContent = '执行中...';
+            executionInfo.innerHTML = '<i class="fas fa-clock text-warning"></i> 执行中...';
+
+            const startTime = Date.now();
+
+            fetch('/api/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const executionTime = ((Date.now() - startTime) / 1000).toFixed(3);
+
+                    if (data.success) {
+                        showSuccess(data.output || '(无输出)', data, executionTime);
+
+                        // Add to history
+                        executionHistory.push({
+                            code: code,
+                            output: data.output,
+                            timestamp: new Date().toLocaleString(),
+                            success: true
+                        });
+                    } else {
+                        showError(data.error, executionTime);
+
+                        // Add to history
+                        executionHistory.push({
+                            code: code,
+                            error: data.error,
+                            timestamp: new Date().toLocaleString(),
+                            success: false
+                        });
+                    }
+                })
+                .catch(error => {
+                    const executionTime = ((Date.now() - startTime) / 1000).toFixed(3);
+                    showError(`网络错误: ${error.message}`, executionTime);
+                })
+                .finally(() => {
+                    runButton.innerHTML = originalText;
+                    runButton.disabled = false;
+                });
+        }
+
+        function showSuccess(output, data, executionTime) {
+            outputArea.querySelector('pre').textContent = output;
+            outputArea.querySelector('pre').className = 'mb-0 success-output';
+
+            executionInfo.innerHTML = `
             <i class="fas fa-check text-success"></i> 
             执行成功 (耗时: ${data.execution_time || executionTime}s)
         `;
-        
-        // Show variables
-        if (data.variables && Object.keys(data.variables).length > 0) {
-            let varsHtml = '';
-            for (const [name, value] of Object.entries(data.variables)) {
-                varsHtml += `<div><strong>${name}:</strong> ${JSON.stringify(value)}</div>`;
+
+            // Show variables
+            if (data.variables && Object.keys(data.variables).length > 0) {
+                let varsHtml = '';
+                for (const [name, value] of Object.entries(data.variables)) {
+                    varsHtml += `<div><strong>${name}:</strong> ${JSON.stringify(value)}</div>`;
+                }
+                variablesInfo.innerHTML = varsHtml;
+            } else {
+                variablesInfo.textContent = '暂无变量';
             }
-            variablesInfo.innerHTML = varsHtml;
-        } else {
-            variablesInfo.textContent = '暂无变量';
         }
-    }
-    
-    function showError(error, executionTime) {
-        outputArea.querySelector('pre').textContent = error;
-        outputArea.querySelector('pre').className = 'mb-0 error-output';
-        
-        const timeInfo = executionTime ? ` (耗时: ${executionTime}s)` : '';
-        executionInfo.innerHTML = `
+
+        function showError(error, executionTime) {
+            outputArea.querySelector('pre').textContent = error;
+            outputArea.querySelector('pre').className = 'mb-0 error-output';
+
+            const timeInfo = executionTime ? ` (耗时: ${executionTime}s)` : '';
+            executionInfo.innerHTML = `
             <i class="fas fa-times text-danger"></i> 
             执行失败${timeInfo}
         `;
-        
-        variablesInfo.textContent = '暂无变量';
-    }
-});
 
-// Example code loading
-function loadExample(type) {
-    
-    const examples = {
-        'hello_world': `# Hello World 示例
+            variablesInfo.textContent = '暂无变量';
+        }
+    });
+
+    // Example code loading
+    function loadExample(type) {
+
+        const examples = {
+            'hello_world': `# Hello World 示例
 print("Hello, World!")
 print("欢迎来到 Python 学习平台！")
 
@@ -317,7 +322,7 @@ print("欢迎来到 Python 学习平台！")
 result = 2 + 3
 print(f"2 + 3 = {result}")`,
 
-        'variables': `# 变量和数据类型示例
+            'variables': `# 变量和数据类型示例
 # 基本数据类型
 name = "张三"
 age = 25
@@ -334,7 +339,7 @@ age_str = str(age)
 print(f"年龄(字符串): {age_str}")
 print(f"类型: {type(age_str)}")`,
 
-        'loops': `# 循环示例
+            'loops': `# 循环示例
 # for 循环
 print("=== for 循环 ===")
 fruits = ["苹果", "香蕉", "橙子"]
@@ -352,64 +357,64 @@ while count <= 5:
 print("\\n=== 列表生成式 ===")
 squares = [x**2 for x in range(1, 6)]
 print(f"平方数: {squares}")`
-    };
-    
-    if (examples[type]) {
-        codeMirrorEditor.setValue(examples[type]);
+        };
+
+        if (examples[type]) {
+            codeMirrorEditor.setValue(examples[type]);
+            codeMirrorEditor.focus();
+        }
+    }
+
+    function clearCode() {
+        codeMirrorEditor.setValue('');
         codeMirrorEditor.focus();
     }
-}
 
-function clearCode() {
-    codeMirrorEditor.setValue('');
-    codeMirrorEditor.focus();
-}
+    function clearOutput() {
+        document.getElementById('output-area').querySelector('pre').textContent = '点击"运行代码"查看结果...';
+        document.getElementById('output-area').querySelector('pre').className = 'mb-0';
+        document.getElementById('execution-info').textContent = '准备就绪';
+        document.getElementById('variables-info').textContent = '暂无变量';
+    }
 
-function clearOutput() {
-    document.getElementById('output-area').querySelector('pre').textContent = '点击"运行代码"查看结果...';
-    document.getElementById('output-area').querySelector('pre').className = 'mb-0';
-    document.getElementById('execution-info').textContent = '准备就绪';
-    document.getElementById('variables-info').textContent = '暂无变量';
-}
+    function formatCode() {
+        const code = codeMirrorEditor.getValue();
 
-function formatCode() {
-    const code = codeMirrorEditor.getValue();
-    
-    // Simple code formatting (basic indentation fix)
-    const lines = code.split('\n');
-    let indentLevel = 0;
-    const formattedLines = [];
-    
-    lines.forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) {
-            formattedLines.push('');
-            return;
-        }
-        
-        // Decrease indent for 'else', 'elif', 'except', 'finally'
-        if (trimmed.startsWith('else') || trimmed.startsWith('elif') || 
-            trimmed.startsWith('except') || trimmed.startsWith('finally')) {
-            indentLevel = Math.max(0, indentLevel - 1);
-        }
-        
-        // Add current line with proper indentation
-        formattedLines.push('    '.repeat(indentLevel) + trimmed);
-        
-        // Increase indent after ':' (function, class, if, for, etc.)
-        if (trimmed.endsWith(':')) {
-            indentLevel++;
-        }
-        
-        // Reset indent for top-level statements
-        if (!trimmed.startsWith(' ') && !trimmed.endsWith(':') && 
-            !trimmed.startsWith('else') && !trimmed.startsWith('elif') && 
-            !trimmed.startsWith('except') && !trimmed.startsWith('finally')) {
-            indentLevel = 0;
-        }
-    });
-    
-    codeMirrorEditor.setValue(formattedLines.join('\n'));
-}
+        // Simple code formatting (basic indentation fix)
+        const lines = code.split('\n');
+        let indentLevel = 0;
+        const formattedLines = [];
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed) {
+                formattedLines.push('');
+                return;
+            }
+
+            // Decrease indent for 'else', 'elif', 'except', 'finally'
+            if (trimmed.startsWith('else') || trimmed.startsWith('elif') ||
+                trimmed.startsWith('except') || trimmed.startsWith('finally')) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+
+            // Add current line with proper indentation
+            formattedLines.push('    '.repeat(indentLevel) + trimmed);
+
+            // Increase indent after ':' (function, class, if, for, etc.)
+            if (trimmed.endsWith(':')) {
+                indentLevel++;
+            }
+
+            // Reset indent for top-level statements
+            if (!trimmed.startsWith(' ') && !trimmed.endsWith(':') &&
+                !trimmed.startsWith('else') && !trimmed.startsWith('elif') &&
+                !trimmed.startsWith('except') && !trimmed.startsWith('finally')) {
+                indentLevel = 0;
+            }
+        });
+
+        codeMirrorEditor.setValue(formattedLines.join('\n'));
+    }
 </script>
 {% endblock %}

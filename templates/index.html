@@ -7,7 +7,7 @@
 <div class="hero-section bg-gradient text-dark py-5 mb-5 rounded">
     <div class="container text-center">
         <h1 class="display-4 mb-3 text-dark">
-            🐍 Python学习平台
+            Python学习平台
         </h1>
         <p class="lead mb-4 text-dark">
             一个集成的Python学习环境，包含多个核心模块和实用工具
@@ -15,10 +15,14 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <span class="badge bg-light text-dark fs-6">🔒 安全代码执行</span>
-                    <span class="badge bg-light text-dark fs-6">📚 9个学习模块</span>
-                    <span class="badge bg-light text-dark fs-6">💡 丰富示例代码</span>
-                    <span class="badge bg-light text-dark fs-6">🛠️ 实用工具</span>
+                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
+                        class="fs-6">安全代码执行</span>
+                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
+                        class="fs-6">9个学习模块</span>
+                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
+                        class="fs-6">丰富示例代码</span>
+                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
+                        class="fs-6">实用工具</span>
                 </div>
             </div>
         </div>
@@ -44,17 +48,17 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="module-icon fs-1">{{ module.icon }}</div>
-                    <span class="badge bg-{{ 'success' if module.difficulty == '入门' else 'primary' if module.difficulty == '基础' else 'warning' if module.difficulty == '中级' else 'danger' }}">
+                    <span
+                        class="badge bg-{{ 'success' if module.difficulty == '入门' else 'primary' if module.difficulty == '基础' else 'warning' if module.difficulty == '中级' else 'danger' }}">
                         {{ module.difficulty }}
                     </span>
                 </div>
-                
+
                 <h5 class="card-title">{{ module.title }}</h5>
                 <p class="card-text text-muted">{{ module.description }}</p>
-                
+
                 <div class="mt-auto">
-                    <a href="{{ url_for('module_detail', module_id=module.id) }}" 
-                       class="btn btn-primary btn-sm">
+                    <a href="{{ url_for('module_detail', module_id=module.id) }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-play"></i> 开始学习
                     </a>
                 </div>
@@ -76,37 +80,37 @@
 <div class="row g-4">
     <div class="col-md-4">
         <div class="feature-card feature-card-enhanced text-center p-4">
-            <div class="feature-icon text-light fs-1 mb-3">
+            <div class="feature-icon text-dark fs-1 mb-3">
                 <i class="fas fa-shield-alt"></i>
             </div>
-            <h5 class="text-white">安全执行环境</h5>
-            <p class="text-light">
+            <h5 class="text-dark">安全执行环境</h5>
+            <p class="text-dark">
                 内置安全代码执行器，确保学习过程中的系统安全，
                 支持大部分Python语法和标准库功能。
             </p>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="feature-card feature-card-enhanced text-center p-4">
-            <div class="feature-icon text-light fs-1 mb-3">
+            <div class="feature-icon text-dark fs-1 mb-3">
                 <i class="fas fa-code"></i>
             </div>
-            <h5 class="text-white">丰富示例代码</h5>
-            <p class="text-light">
+            <h5 class="text-dark">丰富示例代码</h5>
+            <p class="text-dark">
                 每个模块都包含大量精心设计的示例代码，
                 配有详细注释和说明，便于理解和学习。
             </p>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="feature-card feature-card-enhanced text-center p-4">
-            <div class="feature-icon text-light fs-1 mb-3">
+            <div class="feature-icon text-dark fs-1 mb-3">
                 <i class="fas fa-tools"></i>
             </div>
-            <h5 class="text-white">实用工具集</h5>
-            <p class="text-light">
+            <h5 class="text-dark">实用工具集</h5>
+            <p class="text-dark">
                 提供正则表达式测试工具、代码练习场等
                 实用功能，提升学习效率和体验。
             </p>
@@ -119,16 +123,13 @@
     <div class="col-12 text-center">
         <h3 class="mb-4">快速开始</h3>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
-            <a href="{{ url_for('module_detail', module_id='variables') }}" 
-               class="btn btn-outline-primary btn-lg">
+            <a href="{{ url_for('module_detail', module_id='variables') }}" class="btn btn-outline-primary btn-lg">
                 <i class="fas fa-play"></i> 从基础开始
             </a>
-            <a href="{{ url_for('code_playground') }}" 
-               class="btn btn-outline-success btn-lg">
+            <a href="{{ url_for('code_playground') }}" class="btn btn-outline-success btn-lg">
                 <i class="fas fa-code"></i> 代码练习场
             </a>
-            <a href="{{ url_for('regex_tool') }}" 
-               class="btn btn-outline-info btn-lg">
+            <a href="{{ url_for('regex_tool') }}" class="btn btn-outline-info btn-lg">
                 <i class="fas fa-search"></i> 正则工具
             </a>
         </div>
@@ -167,7 +168,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
                 <div class="card border-success">
                     <div class="card-header bg-success text-white">
@@ -207,10 +208,10 @@
                 <h5 class="text-primary mb-3">
                     <i class="fas fa-university"></i> 版权声明
                 </h5>
-                <p class="mb-2 lead">版权归<strong>相关机构</strong>所有</p>
+                <p class="mb-2 lead">版权归<strong>复旦大学计算与智能创新学院</strong>所有</p>
                 <p class="mb-0 text-muted small">
                     本平台仅供教学和学习使用，严禁用于商业目的。
-                    如有问题请联系相关机构。
+                    如有问题请联系复旦大学计算与智能创新学院。
                 </p>
             </div>
         </div>
@@ -218,64 +219,64 @@
 </div>
 
 <style>
-.hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #b794f6 100%);
-}
+    .hero-section {
+        background-color: var(--light-color);
+    }
 
-.module-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: none;
-}
+    .module-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+    }
 
-.module-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
+    .module-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    }
 
-.module-icon {
-    line-height: 1;
-}
+    .module-icon {
+        line-height: 1;
+    }
 
-.feature-card {
-    transition: transform 0.3s ease;
-}
+    .feature-card {
+        transition: transform 0.3s ease;
+    }
 
-.feature-card:hover {
-    transform: translateY(-3px);
-}
+    .feature-card:hover {
+        transform: translateY(-3px);
+    }
 
-.feature-icon {
-    line-height: 1;
-}
+    .feature-icon {
+        line-height: 1;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Add smooth scrolling and animations
-document.addEventListener('DOMContentLoaded', function() {
-    // Animate module cards on scroll
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
+    // Add smooth scrolling and animations
+    document.addEventListener('DOMContentLoaded', function () {
+        // Animate module cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all module cards
+        document.querySelectorAll('.module-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
         });
-    }, observerOptions);
-    
-    // Observe all module cards
-    document.querySelectorAll('.module-card').forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(card);
     });
-});
 </script>
 {% endblock %}

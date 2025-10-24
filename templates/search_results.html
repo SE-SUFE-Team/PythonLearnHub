@@ -7,200 +7,198 @@
     <div class="col-12 mb-4">
         <h2><i class="fas fa-search"></i> 搜索结果</h2>
         {% if query %}
-            <p class="text-muted">搜索关键词: <strong>"{{ query }}"</strong></p>
+        <p class="text-muted">搜索关键词: <strong>"{{ query }}"</strong></p>
         {% endif %}
     </div>
 </div>
 
 {% if query %}
-    {% if results %}
-        <div class="row">
-            <div class="col-12 mb-3">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> 找到 <strong>{{ results|length }}</strong> 个相关结果
-                </div>
-            </div>
+{% if results %}
+<div class="row">
+    <div class="col-12 mb-3">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 找到 <strong>{{ results|length }}</strong> 个相关结果
         </div>
-        
-        <div class="row">
-            {% for result in results %}
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100 search-result-card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start mb-3">
-                            <span class="result-icon fs-3 me-3">{{ result.icon }}</span>
-                            <div class="flex-grow-1">
-                                <h5 class="card-title mb-1">
-                                    <a href="{{ result.url }}" class="text-decoration-none">
-                                        {{ result.title }}
-                                    </a>
-                                </h5>
-                                <span class="badge bg-{{ 'primary' if result.type == 'module' else 'success' }}">
-                                    {{ '学习模块' if result.type == 'module' else '示例代码' }}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <p class="card-text text-muted">{{ result.description }}</p>
-                        
-                        <div class="mt-auto">
-                            <a href="{{ result.url }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-external-link-alt"></i> 查看详情
+    </div>
+</div>
+
+<div class="row">
+    {% for result in results %}
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 search-result-card">
+            <div class="card-body">
+                <div class="d-flex align-items-start mb-3">
+                    <span class="result-icon fs-3 me-3">{{ result.icon }}</span>
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-1">
+                            <a href="{{ result.url }}" class="text-decoration-none">
+                                {{ result.title }}
                             </a>
-                        </div>
+                        </h5>
+                        <span class="badge bg-{{ 'primary' if result.type == 'module' else 'success' }}">
+                            {{ '学习模块' if result.type == 'module' else '示例代码' }}
+                        </span>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Search Suggestions -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card bg-light">
-                    <div class="card-body">
-                        <h6><i class="fas fa-lightbulb"></i> 搜索建议</h6>
-                        <p class="small text-muted mb-2">如果没有找到想要的内容，可以尝试:</p>
-                        <ul class="small text-muted mb-0">
-                            <li>使用更具体的关键词</li>
-                            <li>尝试相关的同义词</li>
-                            <li>浏览相关的学习模块</li>
-                        </ul>
-                    </div>
+
+                <p class="card-text text-muted">{{ result.description }}</p>
+
+                <div class="mt-auto">
+                    <a href="{{ result.url }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i> 查看详情
+                    </a>
                 </div>
             </div>
         </div>
-        
-    {% else %}
-        <!-- No Results -->
-        <div class="row">
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="fas fa-search fs-1 text-muted mb-3"></i>
-                    <h4>没有找到相关结果</h4>
-                    <p class="text-muted">抱歉，没有找到与 "<strong>{{ query }}</strong>" 相关的内容。</p>
-                    
-                    <div class="mt-4">
-                        <h6>建议您:</h6>
-                        <ul class="list-unstyled">
-                            <li class="mb-2">
-                                <i class="fas fa-check text-success"></i> 
-                                检查关键词拼写是否正确
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-check text-success"></i> 
-                                尝试使用更简单的关键词
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-check text-success"></i> 
-                                浏览下面的推荐内容
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Search Suggestions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6><i class="fas fa-lightbulb"></i> 搜索建议</h6>
+                <p class="small text-muted mb-2">如果没有找到想要的内容，可以尝试:</p>
+                <ul class="small text-muted mb-0">
+                    <li>使用更具体的关键词</li>
+                    <li>尝试相关的同义词</li>
+                    <li>浏览相关的学习模块</li>
+                </ul>
             </div>
         </div>
-        
-        <!-- Popular Modules -->
-        <div class="row">
-            <div class="col-12 mb-3">
-                <h5><i class="fas fa-star"></i> 热门学习模块</h5>
-            </div>
-        </div>
-        
-        <div class="row">
-            {% for module in navigation_modules[:6] %}
-            <div class="col-lg-4 col-md-6 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <span class="fs-3 me-3">{{ module.icon }}</span>
-                            <div>
-                                <h6 class="mb-1">
-                                    <a href="{{ url_for('module_detail', module_id=module.id) }}" 
-                                       class="text-decoration-none">
-                                        {{ module.title }}
-                                    </a>
-                                </h6>
-                                <small class="text-muted">{{ module.description }}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-    
+    </div>
+</div>
+
 {% else %}
-    <!-- Empty Search -->
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="fas fa-search fs-1 text-muted mb-3"></i>
-                <h4>请输入搜索关键词</h4>
-                <p class="text-muted">在上方搜索框中输入您想要查找的内容</p>
-                
-                <div class="mt-4">
-                    <form class="d-flex justify-content-center" method="GET" action="{{ url_for('search') }}">
-                        <div class="input-group" style="max-width: 400px;">
-                            <input class="form-control" type="search" name="q" 
-                                   placeholder="搜索知识点、示例代码..." autofocus>
-                            <button class="btn btn-primary" type="submit">
-                                <i class="fas fa-search"></i> 搜索
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<!-- No Results -->
+<div class="row">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-search fs-1 text-muted mb-3"></i>
+            <h4>没有找到相关结果</h4>
+            <p class="text-muted">抱歉，没有找到与 "<strong>{{ query }}</strong>" 相关的内容。</p>
+
+            <div class="mt-4">
+                <h6>建议您:</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        检查关键词拼写是否正确
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        尝试使用更简单的关键词
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success"></i>
+                        浏览下面的推荐内容
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
-    
-    <!-- Search Examples -->
-    <div class="row">
-        <div class="col-12 mb-3">
-            <h5><i class="fas fa-lightbulb"></i> 搜索示例</h5>
-            <p class="text-muted">您可以搜索以下类型的内容:</p>
-        </div>
+</div>
+
+<!-- Popular Modules -->
+<div class="row">
+    <div class="col-12 mb-3">
+        <h5><i class="fas fa-star"></i> 热门学习模块</h5>
     </div>
-    
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="fas fa-book"></i> 学习主题</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-light text-dark">变量</span>
-                        <span class="badge bg-light text-dark">字符串</span>
-                        <span class="badge bg-light text-dark">列表</span>
-                        <span class="badge bg-light text-dark">函数</span>
-                        <span class="badge bg-light text-dark">循环</span>
-                        <span class="badge bg-light text-dark">异常</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6 mb-4">
-            <div class="card border-success">
-                <div class="card-header bg-success text-white">
-                    <h6 class="mb-0"><i class="fas fa-code"></i> 代码操作</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-light text-dark">print</span>
-                        <span class="badge bg-light text-dark">for循环</span>
-                        <span class="badge bg-light text-dark">if语句</span>
-                        <span class="badge bg-light text-dark">正则表达式</span>
-                        <span class="badge bg-light text-dark">文件操作</span>
-                        <span class="badge bg-light text-dark">异常处理</span>
+</div>
+
+<div class="row">
+    {% for module in navigation_modules[:6] %}
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <span class="fs-3 me-3">{{ module.icon }}</span>
+                    <div>
+                        <h6 class="mb-1">
+                            <a href="{{ url_for('module_detail', module_id=module.id) }}" class="text-decoration-none">
+                                {{ module.title }}
+                            </a>
+                        </h6>
+                        <small class="text-muted">{{ module.description }}</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% else %}
+<!-- Empty Search -->
+<div class="row">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-search fs-1 text-muted mb-3"></i>
+            <h4>请输入搜索关键词</h4>
+            <p class="text-muted">在上方搜索框中输入您想要查找的内容</p>
+
+            <div class="mt-4">
+                <form class="d-flex justify-content-center" method="GET" action="{{ url_for('search') }}">
+                    <div class="input-group" style="max-width: 400px;">
+                        <input class="form-control" type="search" name="q" placeholder="搜索知识点、示例代码..." autofocus>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Examples -->
+<div class="row">
+    <div class="col-12 mb-3">
+        <h5><i class="fas fa-lightbulb"></i> 搜索示例</h5>
+        <p class="text-muted">您可以搜索以下类型的内容:</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-book"></i> 学习主题</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-light text-dark">变量</span>
+                    <span class="badge bg-light text-dark">字符串</span>
+                    <span class="badge bg-light text-dark">列表</span>
+                    <span class="badge bg-light text-dark">函数</span>
+                    <span class="badge bg-light text-dark">循环</span>
+                    <span class="badge bg-light text-dark">异常</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-code"></i> 代码操作</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-light text-dark">print</span>
+                    <span class="badge bg-light text-dark">for循环</span>
+                    <span class="badge bg-light text-dark">if语句</span>
+                    <span class="badge bg-light text-dark">正则表达式</span>
+                    <span class="badge bg-light text-dark">文件操作</span>
+                    <span class="badge bg-light text-dark">异常处理</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 <!-- Quick Actions -->
@@ -226,7 +224,7 @@
         <div class="alert alert-light border-primary text-center">
             <small class="text-muted">
                 <i class="fas fa-university"></i>
-                搜索功能和内容版权归 <strong>相关机构</strong> 所有
+                搜索功能和内容版权归 <strong>复旦大学计算与智能创新学院</strong> 所有
                 | 仅供教学和学习使用
             </small>
         </div>
@@ -234,63 +232,63 @@
 </div>
 
 <style>
-.search-result-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
+    .search-result-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-.search-result-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
+    .search-result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
 
-.result-icon {
-    line-height: 1;
-}
+    .result-icon {
+        line-height: 1;
+    }
 
-.badge {
-    font-size: 0.75em;
-}
+    .badge {
+        font-size: 0.75em;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Highlight search terms in results
-    const query = "{{ query | e }}";
-    if (query && query.length > 2) {
-        highlightSearchTerms(query);
-    }
-});
-
-function highlightSearchTerms(query) {
-    const terms = query.toLowerCase().split(' ').filter(term => term.length > 2);
-    const cards = document.querySelectorAll('.search-result-card');
-    
-    cards.forEach(card => {
-        const title = card.querySelector('.card-title a');
-        const description = card.querySelector('.card-text');
-        
-        terms.forEach(term => {
-            if (title) {
-                highlightInElement(title, term);
-            }
-            if (description) {
-                highlightInElement(description, term);
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        // Highlight search terms in results
+        const query = "{{ query | e }}";
+        if (query && query.length > 2) {
+            highlightSearchTerms(query);
+        }
     });
-}
 
-function highlightInElement(element, term) {
-    const text = element.textContent;
-    const regex = new RegExp(`(${term})`, 'gi');
-    
-    if (regex.test(text)) {
-        element.innerHTML = text.replace(regex, '<mark>$1</mark>');
+    function highlightSearchTerms(query) {
+        const terms = query.toLowerCase().split(' ').filter(term => term.length > 2);
+        const cards = document.querySelectorAll('.search-result-card');
+
+        cards.forEach(card => {
+            const title = card.querySelector('.card-title a');
+            const description = card.querySelector('.card-text');
+
+            terms.forEach(term => {
+                if (title) {
+                    highlightInElement(title, term);
+                }
+                if (description) {
+                    highlightInElement(description, term);
+                }
+            });
+        });
     }
-}
+
+    function highlightInElement(element, term) {
+        const text = element.textContent;
+        const regex = new RegExp(`(${term})`, 'gi');
+
+        if (regex.test(text)) {
+            element.innerHTML = text.replace(regex, '<mark>$1</mark>');
+        }
+    }
 </script>
 {% endblock %}

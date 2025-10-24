@@ -4,15 +4,44 @@ Python学习平台 - 主应用
 """
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-from safe_executor import executor
-from module_content import ALL_MODULES, MODULE_NAVIGATION
+from utils.safe_executor import executor
+from utils.module_content import ALL_MODULES, MODULE_NAVIGATION
 import re
 import json
 import traceback
 from datetime import datetime
+from models import db
+from models.user import User
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'python_learning_platform_2024'
+
+# SQLite 数据库配置
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# ======================== 数据库 ========================
+
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+    # 插入测试用户
+    if not User.query.filter_by(username='testuser').first():
+        test_user = User(
+            id=1,
+            username='testuser',
+            email='test@example.com',
+            password_hash='123456'
+        )
+        db.session.add(test_user)
+        db.session.commit()
+        print("✅ 数据库表测试，testuser已插入")
+
+    # 查询用户验证
+    users = User.query.all()
+    for u in users:
+        print(u)
 
 # ======================== 主页和导航 ========================
 

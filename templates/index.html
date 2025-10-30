@@ -61,6 +61,16 @@
                     <a href="{{ url_for('module_detail', module_id=module.id) }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-play"></i> 开始学习
                     </a>
+                    {# 显示学习进度条（从后端传入 progress_map，值为 0~1） #}
+                    {% set pct = (progress_map.get(module.id, 0) * 100) | int %}
+                    <div class="mt-3">
+                        {# 使用 data-progress 并通过 JS 设置宽度，避免内联样式；为无障碍添加 aria-label #}
+                        <div class="progress module-progress" aria-label="学习进度">
+                            <div class="progress-bar" role="progressbar" data-progress="{{ pct }}" aria-valuemin="0" aria-valuemax="100" aria-label="模块学习进度">
+                                <span class="progress-text">{{ pct }}%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -276,6 +286,22 @@
             card.style.transform = 'translateY(20px)';
             card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(card);
+        });
+
+        // Initialize module progress bars: read data-progress and set width + aria-valuenow
+        document.querySelectorAll('.progress-bar[data-progress]').forEach(pb => {
+            try {
+                const v = parseInt(pb.getAttribute('data-progress') || '0', 10);
+                const pct = Math.max(0, Math.min(100, isNaN(v) ? 0 : v));
+                pb.style.width = pct + '%';
+                pb.setAttribute('aria-valuenow', String(pct));
+                // 更新可视文本（保持与 aria 一致）
+                const txt = pb.querySelector('.progress-text');
+                if (txt) txt.textContent = pct + '%';
+            } catch (err) {
+                // 不要阻塞页面
+                console.warn('设置进度条失败', err);
+            }
         });
     });
 </script>

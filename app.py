@@ -12,6 +12,8 @@ import traceback
 from datetime import datetime
 from models import db
 from models.user import User
+from models.progress import Progress
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'python_learning_platform_2024'
@@ -43,12 +45,25 @@ with app.app_context():
     for u in users:
         print(u)
 
+
+
 # ======================== 主页和导航 ========================
 
 @app.route('/')
 def index():
     """主页"""
-    return render_template('index.html', modules=MODULE_NAVIGATION)
+    # 查询当前用户的进度数据并传入模板（此处使用测试用户 id=1）
+    progress_map = {}
+    try:
+        progresses = Progress.query.filter_by(user_id=1).all()
+        for p in progresses:
+            # 存储为 0~1 的浮点数
+            progress_map[p.module_id] = float(p.progress_value) if p.progress_value is not None else 0.0
+    except Exception:
+        # 如果查询失败（例如数据库尚未创建），保持空字典
+        progress_map = {}
+
+    return render_template('index.html', modules=MODULE_NAVIGATION, progress_map=progress_map)
 
 @app.route('/about')
 def about():
@@ -249,6 +264,99 @@ def get_examples(module_id):
     
     else:
         return jsonify({'error': '未知模块类型'})
+
+# ======================== 进度条功能 ========================
+@app.route('/api/progress', methods=['POST'])
+def api_progress():
+    """接收前端上报的进度数据并插入或更新 Progress 表。
+    请求 JSON 示例:
+    {
+      'module_id': 'variables',
+      'browse_coverage': 0.75,   # 0~1
+      'study_time': 1.5,         # 分钟
+      'quiz_completion': 0.2     # 可选，0~1
+    }
+    """
+    try:
+        data = request.get_json() or {}
+        module_id = data.get('module_id')
+        if not module_id:
+            return jsonify({'success': False, 'error': '缺少 module_id'}), 400
+
+        if module_id not in ALL_MODULES:
+            return jsonify({'success': False, 'error': '模块不存在'}), 400
+
+        try:
+            browse = float(data.get('browse_coverage', 0) or 0)
+        except (TypeError, ValueError):
+            browse = 0.0
+
+        try:
+            study_time = float(data.get('study_time', 0) or 0)
+        except (TypeError, ValueError):
+            study_time = 0.0
+
+        quiz = data.get('quiz_completion', None)
+        if quiz is not None:
+            try:
+                quiz = float(quiz)
+            except (TypeError, ValueError):
+                quiz = None
+
+        # 临时处理：如果没有登录系统，使用 testuser 作为演示用户
+        user = User.query.filter_by(username='testuser').first()
+        if not user:
+            return jsonify({'success': False, 'error': '用户不存在'}), 400
+
+        # 查找已有记录
+        p = Progress.query.filter_by(user_id=user.id, module_id=module_id).first()
+        if p:
+            # 合并策略：browse 取最大（更高覆盖率），study_time 累加，quiz 取最大
+            p.browse_coverage = max(p.browse_coverage or 0.0, min(max(browse, 0.0), 1.0))
+            p.study_time = (p.study_time or 0.0) + max(study_time, 0.0)
+            if quiz is not None:
+                p.quiz_completion = max(p.quiz_completion or 0.0, min(max(quiz, 0.0), 1.0))
+
+            # 重新计算 progress_value（权重与之前一致，可后续抽出为配置）
+            study_norm = min((p.study_time or 0.0) / 10.0, 1.0)
+            p.progress_value = round((p.browse_coverage * 0.4) + ((p.quiz_completion or 0.0) * 0.4) + (study_norm * 0.2), 4)
+            p.last_updated = datetime.now()
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify({'success': False, 'error': '数据库冲突，稍后重试'}), 500
+
+            return jsonify({'success': True, 'action': 'updated', 'progress_value': p.progress_value})
+        else:
+            # 新建记录
+            init_quiz = float(quiz) if quiz is not None else 0.0
+            study_norm = min(max(study_time, 0.0) / 120.0, 1.0)
+            progress_value = round((min(max(browse, 0.0), 1.0) * 0.4) + (init_quiz * 0.4) + (study_norm * 0.2), 4)
+            new = Progress(
+                user_id=user.id,
+                module_id=module_id,
+                browse_coverage=min(max(browse, 0.0), 1.0),
+                study_time=max(study_time, 0.0),
+                quiz_completion=init_quiz,
+                progress_value=progress_value,
+                last_updated=datetime.now()
+            )
+            db.session.add(new)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                # 可能并发插入导致已存在，尝试读取并返回现有值
+                existing = Progress.query.filter_by(user_id=user.id, module_id=module_id).first()
+                if existing:
+                    return jsonify({'success': True, 'action': 'exists', 'progress_value': existing.progress_value})
+                return jsonify({'success': False, 'error': '插入失败'}), 500
+
+            return jsonify({'success': True, 'action': 'created', 'progress_value': progress_value})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 # ======================== 工具页面 ========================
 

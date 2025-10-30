@@ -156,6 +156,77 @@
     <!-- CodeMirror for code editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <!-- AI Assistant Chat Modal -->
+    <div class="modal fade" id="aiChatModal" tabindex="-1" aria-labelledby="aiChatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="aiChatModalLabel">
+                        <img src="{{ url_for('static', filename='svg/AI.svg') }}" alt="AI" class="ai-icon me-2">
+                        AI学习助手
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message ai-message">
+                                <div class="message-content">
+                                    <div class="message-text">
+                                        你好！我是你的Python学习助手。有什么Python相关的问题都可以问我，我会为你解答！
+                                    </div>
+                                    <div class="message-time">刚刚</div>
+                                </div>
+                            </div>
+                            <div class="message ai-message" id="apiConfigMessage" style="display: none;">
+                                <div class="message-content">
+                                    <div class="message-text">
+                                        <h3>🔧 API配置说明</h3>
+                                        <p>要使用AI助手功能，请先配置大模型API：</p>
+                                        <ol>
+                                            <li>选择一个大模型服务商（推荐OpenAI）</li>
+                                            <li>申请API密钥</li>
+                                            <li>在 <code>static/js/main.js</code> 文件中配置API参数</li>
+                                        </ol>
+                                        <p><strong>详细配置步骤：</strong></p>
+                                        <ul>
+                                            <li><a href="https://platform.openai.com/" target="_blank">OpenAI API</a>
+                                            </li>
+                                            <li><a href="https://cloud.baidu.com/" target="_blank">百度文心一言</a></li>
+                                            <li><a href="https://www.aliyun.com/" target="_blank">阿里通义千问</a></li>
+                                            <li><a href="https://open.bigmodel.cn/" target="_blank">智谱AI</a></li>
+                                        </ul>
+                                        <p>查看项目根目录的 <code>AI_API_SETUP.md</code> 文件获取详细配置说明。</p>
+                                    </div>
+                                    <div class="message-time">配置提示</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-container">
+                            <div class="input-group">
+                                <textarea class="form-control" id="chatInput" placeholder="输入你的问题..." rows="2"
+                                    style="resize: none;"></textarea>
+                                <button class="btn btn-outline-secondary" type="button" id="voiceButton" title="语音输入">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button class="btn btn-primary" type="button" id="sendButton">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                            <div class="chat-status" id="chatStatus"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Floating Button -->
+    <div class="ai-assistant-btn" id="aiAssistantBtn" title="AI学习助手">
+        <img src="{{ url_for('static', filename='svg/AI.svg') }}" alt="AI助手" class="ai-icon">
+        <div class="ai-pulse"></div>
+    </div>
+
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 

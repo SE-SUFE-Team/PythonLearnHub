@@ -13,6 +13,7 @@ from datetime import datetime
 from models import db
 from models.user import User
 from models.progress import Progress
+from models.notes import Note
 from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
@@ -319,7 +320,7 @@ def api_progress():
 
             # 重新计算 progress_value（权重与之前一致，可后续抽出为配置）
             study_norm = min((p.study_time or 0.0) / 10.0, 1.0)
-            p.progress_value = round((p.browse_coverage * 0.4) + ((p.quiz_completion or 0.0) * 0.4) + (study_norm * 0.2), 4)
+            p.progress_value = round((p.browse_coverage * 0.6) + ((p.quiz_completion or 0.0) * 0.0) + (study_norm * 0.4), 4)
             p.last_updated = datetime.now()
             try:
                 db.session.commit()
@@ -332,7 +333,7 @@ def api_progress():
             # 新建记录
             init_quiz = float(quiz) if quiz is not None else 0.0
             study_norm = min(max(study_time, 0.0) / 120.0, 1.0)
-            progress_value = round((min(max(browse, 0.0), 1.0) * 0.4) + (init_quiz * 0.4) + (study_norm * 0.2), 4)
+            progress_value = round((min(max(browse, 0.0), 1.0) * 0.6) + (init_quiz * 0.0) + (study_norm * 0.4), 4)
             new = Progress(
                 user_id=user.id,
                 module_id=module_id,
@@ -347,7 +348,6 @@ def api_progress():
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
-                # 可能并发插入导致已存在，尝试读取并返回现有值
                 existing = Progress.query.filter_by(user_id=user.id, module_id=module_id).first()
                 if existing:
                     return jsonify({'success': True, 'action': 'exists', 'progress_value': existing.progress_value})
@@ -357,6 +357,101 @@ def api_progress():
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+
+# ======================== 学习笔记功能 ========================
+@app.route('/api/notes', methods=['GET'])
+def api_get_notes():
+    """获取当前用户的笔记列表，支持 q 查询（标题或内容模糊匹配）"""
+    try:
+        q = request.args.get('q', '').strip()
+        # 暂时使用 testuser 作为示例用户（如有登录，改为 current_user.id）
+        user = User.query.filter_by(username='testuser').first()
+        if not user:
+            return jsonify({'error': '用户不存在'}), 400
+
+        query = Note.query.filter_by(user_id=user.id)
+        if q:
+            like = f"%{q}%"
+            query = query.filter((Note.title.ilike(like)) | (Note.content.ilike(like)))
+
+        notes = query.order_by(Note.updated_at.desc()).all()
+        return jsonify([n.to_dict() for n in notes])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/notes', methods=['POST'])
+def api_create_note():
+    try:
+        data = request.get_json() or {}
+        content = data.get('content', '').strip()
+        title = data.get('title', '').strip() or None
+
+        if not content:
+            return jsonify({'error': 'content 不能为空'}), 400
+
+        user = User.query.filter_by(username='testuser').first()
+        if not user:
+            return jsonify({'error': '用户不存在'}), 400
+
+        n = Note(user_id=user.id, title=title, content=content)
+        db.session.add(n)
+        db.session.commit()
+        return jsonify({'success': True, 'note': n.to_dict()}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/notes/<int:note_id>', methods=['PUT'])
+def api_update_note(note_id):
+    try:
+        data = request.get_json() or {}
+        content = data.get('content', None)
+        title = data.get('title', None)
+
+        user = User.query.filter_by(username='testuser').first()
+        if not user:
+            return jsonify({'error': '用户不存在'}), 400
+
+        note = Note.query.filter_by(note_id=note_id, user_id=user.id).first()
+        if not note:
+            return jsonify({'error': '笔记不存在或无权限'}), 404
+
+        if content is not None:
+            note.content = content
+        if title is not None:
+            note.title = title or None
+        note.updated_at = datetime.now()
+        db.session.commit()
+        return jsonify({'success': True, 'note': note.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/notes/<int:note_id>', methods=['DELETE'])
+def api_delete_note(note_id):
+    try:
+        user = User.query.filter_by(username='testuser').first()
+        if not user:
+            return jsonify({'error': '用户不存在'}), 400
+
+        note = Note.query.filter_by(note_id=note_id, user_id=user.id).first()
+        if not note:
+            return jsonify({'error': '笔记不存在或无权限'}), 404
+
+        db.session.delete(note)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+
+
 
 # ======================== 工具页面 ========================
 
@@ -452,9 +547,17 @@ def internal_error(error):
 @app.context_processor
 def inject_navigation():
     """注入导航数据到所有模板"""
+    # 尝试注入当前用户名（当前使用 testuser 作为演示用户）
+    try:
+        user = User.query.filter_by(username='testuser').first()
+        username = user.username if user else 'Guest'
+    except Exception:
+        username = 'Guest'
+
     return dict(
         navigation_modules=MODULE_NAVIGATION,
-        current_year=datetime.now().year
+        current_year=datetime.now().year,
+        username=username
     )
 
 # ======================== 启动应用 ========================

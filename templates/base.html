@@ -19,6 +19,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+    <!-- EasyMDE (Markdown Editor) CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.15.0/dist/easymde.min.css">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -228,9 +230,66 @@
         <img src="{{ url_for('static', filename='svg/AI.svg') }}" alt="AI助手" class="ai-icon">
         <div class="ai-pulse"></div>
     </div>
+<!-- 笔记相关 -->
+    <!-- Notes Floating Button -->
+    <div class="notes-btn" id="notesBtn" title="学习笔记">
+        <button class="btn btn-primary rounded-circle notes-fab" id="openNotesBtn" aria-label="打开学习笔记">
+            <i class="fas fa-sticky-note"></i>
+        </button>
+    </div>
+
+    <!-- Notes Modal -->
+    <div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notesModalLabel"><i class="fas fa-sticky-note me-2"></i> 学习笔记</h5>
+                    <!-- 在关闭按钮左侧显示用户名 -->
+                    <div class="ms-3 me-2 text-muted small align-self-center" id="notesUsername">{{ username }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 border-end">
+                            <div class="d-flex mb-2">
+                                <input type="text" id="notesSearch" class="form-control me-2" placeholder="搜索笔记...">
+                                <button class="btn btn-outline-primary" id="newNoteBtn" title="新建笔记"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <div id="notesList" class="notes-list"></div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-2">
+                                <input type="text" id="noteTitle" class="form-control" placeholder="标题（可选，最多100字符）" maxlength="100">
+                            </div>
+                            <div class="mb-2">
+                                <textarea id="noteContent" class="form-control" rows="12" placeholder="在此填写学习笔记，支持多行文本" required></textarea>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <!-- 语音输入按钮（用于将识别结果插入到笔记内容） -->
+                                    <button class="btn btn-outline-secondary me-2" id="notesVoiceBtn" title="语音输入">
+                                        <i class="fas fa-microphone"></i>
+                                    </button>
+                                    <button class="btn btn-success" id="saveNoteBtn"><i class="fas fa-save"></i> 保存</button>
+                                    <button class="btn btn-danger ms-2 d-none" id="deleteNoteBtn"><i class="fas fa-trash"></i> 删除</button>
+                                </div>
+                                <div class="d-flex flex-column align-items-end">
+                                    <div class="text-muted small" id="noteMeta"></div>
+                                    <div class="small text-muted" id="notesVoiceStatus" style="min-width:140px; text-align:right;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- EasyMDE (Markdown Editor) JS -->
+    <script src="https://cdn.jsdelivr.net/npm/easymde@2.15.0/dist/easymde.min.js"></script>
+    <script src="{{ url_for('static', filename='js/notes.js') }}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

@@ -1399,3 +1399,40 @@ body {
         background: white;
     }
 }
+
+/* ========== 笔记样式 ========== */
+.notes-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 32px;
+    z-index: 1100;
+}
+
+.notes-fab {
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+.notes-list {
+    max-height: 60vh;
+    overflow: auto;
+}
+
+.notes-list .note-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.notes-list .note-item:hover {
+    background: rgba(147,174,193,0.04);
+}
+
+.note-meta {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+

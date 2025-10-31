@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - Python学习平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="mb-3">
+                        <i class="fas fa-user-plus text-primary"></i> 用户注册
+                    </h2>
+                    <p class="text-muted">创建新账户，开始您的Python学习之旅</p>
+                </div>
+
+                <!-- 错误消息显示区域 -->
+                <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <!-- 成功消息显示区域 -->
+                <div id="successMessage" class="alert alert-success d-none" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>
+                        <strong>注册成功！</strong>
+                        <p class="mb-2 mt-2">您的账号：<span id="successAccount" class="fw-bold"></span></p>
+                        <p class="mb-0 small">请记住您的账号，用于登录平台。</p>
+                    </div>
+                </div>
+
+                <!-- 注册表单 -->
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-2"></i>用户名
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="请输入用户名" required autocomplete="username">
+                        <small class="form-text text-muted">用户名可以与其他用户重复</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>邮箱
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="请输入邮箱地址" required autocomplete="email">
+                        <small class="form-text text-muted">用于账户验证和找回密码</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>密码
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="请输入密码" required autocomplete="new-password">
+                        <small class="form-text text-muted">建议使用至少6位字符的密码</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">
+                            <i class="fas fa-lock me-2"></i>确认密码
+                        </label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                               placeholder="请再次输入密码" required autocomplete="new-password">
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-user-plus me-2"></i>立即注册
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted mb-0">
+                        已有账户？
+                        <a href="{{ url_for('login_page') }}" class="text-decoration-none">
+                            立即登录
+                        </a>
+                    </p>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="alert alert-info mb-0">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>注册说明
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>注册成功后，系统将自动为您生成唯一的8位数字账号</li>
+                        <li>请妥善保管您的账号和密码</li>
+                        <li>建议使用真实有效的邮箱地址</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+
+    .card-body {
+        background-color: white;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(147, 174, 193, 0.25);
+    }
+
+    .btn-primary {
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(147, 174, 193, 0.4);
+    }
+
+    #submitBtn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const registerForm = document.getElementById('registerForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const successMessage = document.getElementById('successMessage');
+        const successAccount = document.getElementById('successAccount');
+        const submitBtn = document.getElementById('submitBtn');
+
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 隐藏之前的消息
+            errorMessage.classList.add('d-none');
+            successMessage.classList.add('d-none');
+
+            // 获取表单数据
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // 前端验证
+            if (!username || !email || !password || !confirmPassword) {
+                showError('请填写所有必填字段');
+                return;
+            }
+
+            // 验证邮箱格式
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('请输入有效的邮箱地址');
+                return;
+            }
+
+            // 验证密码匹配
+            if (password !== confirmPassword) {
+                showError('两次输入的密码不一致');
+                return;
+            }
+
+            // 验证密码长度
+            if (password.length < 6) {
+                showError('密码长度至少为6位字符');
+                return;
+            }
+
+            // 禁用提交按钮，显示加载状态
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>注册中...';
+
+            try {
+                // 发送注册请求
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 注册成功
+                    successAccount.textContent = data.id;
+                    successMessage.classList.remove('d-none');
+                    registerForm.reset();
+
+                } else {
+                    // 注册失败
+                    showError(data.error || '注册失败，请稍后重试');
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                showError('网络错误，请检查您的网络连接');
+            } finally {
+                // 恢复提交按钮
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('d-none');
+            // 滚动到错误消息
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 实时验证密码匹配
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        confirmPasswordInput.addEventListener('input', function() {
+            if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+                confirmPasswordInput.setCustomValidity('密码不匹配');
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+            }
+        });
+    });
+</script>
+{% endblock %}

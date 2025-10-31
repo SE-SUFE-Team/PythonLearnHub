@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - Python学习平台{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h2 class="mb-3">
+                        <i class="fas fa-sign-in-alt text-primary"></i> 用户登录
+                    </h2>
+                    <p class="text-muted">使用您的账号登录，继续您的Python学习之旅</p>
+                </div>
+
+                <!-- Flash消息显示区域（来自服务端重定向） -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else category }} alert-dismissible fade show mb-3"
+                    role="alert">
+                    <i class="fas fa-{{ 'exclamation-triangle' if category == 'warning' else 'info-circle' }} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <!-- 错误消息显示区域 -->
+                <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <!-- 成功消息显示区域 -->
+                <div id="successMessage" class="alert alert-success d-none" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="successText"></span>
+                </div>
+
+                <!-- 登录表单 -->
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="account" class="form-label">
+                            <i class="fas fa-id-card me-2"></i>账号
+                        </label>
+                        <input type="text" class="form-control" id="account" name="account" 
+                               placeholder="请输入8位数字账号" required autocomplete="username"
+                               pattern="[0-9]{8}" maxlength="8">
+                        <small class="form-text text-muted">请输入注册时获得的8位数字账号</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>密码
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="请输入密码" required autocomplete="current-password">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="showPassword">
+                            <label class="form-check-label" for="showPassword">
+                                显示密码
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-sign-in-alt me-2"></i>立即登录
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted mb-0">
+                        还没有账户？
+                        <a href="{{ url_for('register_page') }}" class="text-decoration-none">
+                            立即注册
+                        </a>
+                    </p>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="alert alert-info mb-0">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>登录说明
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>账号是注册时系统自动生成的8位数字</li>
+                        <li>如果忘记账号，请使用注册时使用的邮箱联系管理员</li>
+                        <li>密码区分大小写，请确保输入正确</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+
+    .card-body {
+        background-color: white;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(147, 174, 193, 0.25);
+    }
+
+    .btn-primary {
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(147, 174, 193, 0.4);
+    }
+
+    #submitBtn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const successMessage = document.getElementById('successMessage');
+        const successText = document.getElementById('successText');
+        const submitBtn = document.getElementById('submitBtn');
+        const showPasswordCheckbox = document.getElementById('showPassword');
+        const passwordInput = document.getElementById('password');
+
+        // 显示/隐藏密码
+        showPasswordCheckbox.addEventListener('change', function() {
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
+
+        // 账号输入限制为数字
+        const accountInput = document.getElementById('account');
+        accountInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 隐藏之前的消息
+            errorMessage.classList.add('d-none');
+            successMessage.classList.add('d-none');
+
+            // 获取表单数据
+            const account = accountInput.value.trim();
+            const password = passwordInput.value;
+
+            // 前端验证
+            if (!account || !password) {
+                showError('请填写所有必填字段');
+                return;
+            }
+
+            // 验证账号格式（8位数字）
+            if (account.length !== 8 || !/^\d{8}$/.test(account)) {
+                showError('账号必须是8位数字');
+                return;
+            }
+
+            // 禁用提交按钮，显示加载状态
+            submitBtn.disabled = true;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>登录中...';
+
+            try {
+                // 发送登录请求
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: account,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 登录成功
+                    successText.textContent = `欢迎回来，${data.name || '用户'}！`;
+                    successMessage.classList.remove('d-none');
+                    
+                    // 2秒后跳转到首页
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    // 登录失败
+                    showError(data.error || '登录失败，请稍后重试');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showError('网络错误，请检查您的网络连接');
+            } finally {
+                // 恢复提交按钮
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('d-none');
+            // 滚动到错误消息
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    });
+</script>
+{% endblock %}
+

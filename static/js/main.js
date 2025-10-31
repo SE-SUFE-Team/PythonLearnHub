@@ -67,6 +67,9 @@ function initializeApp() {
     // 初始化语音识别
     initializeSpeechRecognition();
 
+    // 初始化登出功能
+    initializeLogout();
+
     console.log('✅ Python学习平台初始化完成');
 }
 
@@ -1301,6 +1304,51 @@ function hideVoiceStatus() {
 
     chatStatus.className = 'chat-status';
     chatStatus.innerHTML = '';
+}
+
+/**
+ * 初始化登出功能
+ */
+function initializeLogout() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (!logoutBtn) {
+        console.log('登出按钮不存在（用户未登录）');
+        return;
+    }
+
+    logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('点击登出按钮');
+        
+        // 发送登出请求
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('登出请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('登出成功:', data);
+            // 登出成功，重定向到登录页面
+            window.location.href = '/login';
+        })
+        .catch(error => {
+            console.error('登出失败:', error);
+            // 即使失败也重定向到登录页面
+            window.location.href = '/login';
+        });
+    });
+    
+    console.log('登出功能已初始化');
 }
 
 console.log('📜 主JavaScript文件已加载');

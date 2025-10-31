@@ -85,13 +85,54 @@
                 </ul>
 
                 <!-- Search Form -->
-                <form class="d-flex" method="GET" action="{{ url_for('search') }}">
+                <form class="d-flex me-3" method="GET" action="{{ url_for('search') }}">
                     <input class="form-control me-2" type="search" name="q" placeholder="搜索知识点..."
                         value="{{ request.args.get('q', '') }}">
                     <button class="btn btn-outline-light" type="submit">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
+
+                <!-- User Dropdown Menu -->
+                {% if is_logged_in and current_user %}
+                <div class="dropdown">
+                    <a class="btn btn-outline-light dropdown-toggle d-flex align-items-center" href="#" 
+                       id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-2"></i>
+                        <span>{{ current_user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li class="px-3 py-2 border-bottom">
+                            <div class="small text-muted">账号ID</div>
+                            <div class="fw-bold">{{ current_user.id }}</div>
+                        </li>
+                        <li class="px-3 py-2 border-bottom">
+                            <div class="small text-muted">用户名</div>
+                            <div class="fw-bold">{{ current_user.username }}</div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('index') }}">
+                                <i class="fas fa-home me-2"></i>我的主页
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt me-2"></i>登出
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('login_page') }}" class="btn btn-outline-light">
+                        <i class="fas fa-sign-in-alt me-2"></i>登录
+                    </a>
+                    <a href="{{ url_for('register_page') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>注册
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -99,6 +140,7 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
+            {% if request.endpoint != 'login_page' and request.endpoint != 'register_page' %}
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             {% for category, message in messages %}
@@ -110,6 +152,7 @@
             {% endfor %}
             {% endif %}
             {% endwith %}
+            {% endif %}
 
             {% block content %}{% endblock %}
         </div>

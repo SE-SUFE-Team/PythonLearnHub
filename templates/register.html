@@ -14,6 +14,20 @@
                     <p class="text-muted">创建新账户，开始您的Python学习之旅</p>
                 </div>
 
+                <!-- Flash消息显示区域（来自服务端重定向） -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else category }} alert-dismissible fade show mb-3"
+                    role="alert">
+                    <i class="fas fa-{{ 'exclamation-triangle' if category == 'warning' else 'info-circle' }} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
                 <!-- 错误消息显示区域 -->
                 <div id="errorMessage" class="alert alert-danger d-none" role="alert">
                     <i class="fas fa-exclamation-circle me-2"></i>
@@ -212,7 +226,7 @@
 
                 if (response.ok) {
                     // 注册成功
-                    successAccount.textContent = data.id;
+                    successAccount.textContent = data.user_id;
                     successMessage.classList.remove('d-none');
                     registerForm.reset();
 

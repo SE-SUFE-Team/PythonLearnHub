@@ -3,13 +3,15 @@ Python学习平台 - 主应用
 整合所有Python学习模块的Web应用
 """
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
+from functools import wraps
 from utils.safe_executor import executor
 from utils.module_content import ALL_MODULES, MODULE_NAVIGATION
 import re
 import json
 import traceback
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 from models import db
 from models.user import User
 from models.progress import Progress
@@ -46,17 +48,102 @@ with app.app_context():
     for u in users:
         print(u)
 
+# ======================== 登陆注册 ========================
 
+# 注册页面
+@app.route('/register', methods=['GET'])
+def register_page():
+    return render_template('register.html')
+
+# 注册接口
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    email = data.get('email')
+    if not username or not password or not email:
+        return jsonify({'error': '用户名、密码和邮箱不能为空'}), 400
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({'error': '用户名已存在'}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({'error': '邮箱已存在'}), 400
+
+    hashed_pw = generate_password_hash(password)
+    new_user = User(username=username, email=email, password_hash=hashed_pw)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': '注册成功', 'user_id': new_user.id}), 201
+
+# 登录页面
+@app.route('/login', methods=['GET'])
+def login_page():
+    return render_template('login.html')
+
+# 登录接口
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    id = data.get('id')
+    password = data.get('password')
+
+    user = User.query.filter_by(id=id).first()
+    if not user or not check_password_hash(user.password_hash, password):
+        return jsonify({'error': '账号或密码错误'}), 401
+
+    session['user_id'] = user.id
+    session['username'] = user.username
+
+    return jsonify({'message': '登录成功', 'user_id': user.id, 'username': user.username})
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    """登出用户"""
+    session.clear()
+    return jsonify({'message': '已成功登出'}), 200
+
+@app.route('/me', methods=['GET'])
+def get_current_user():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': '未登录'}), 401
+
+    user = User.query.get(user_id)
+    return jsonify({'user_id': user.id, 'username': user.username})
+
+# ======================== 登录验证装饰器 ========================
+
+def login_required(f):
+    """登录检查装饰器：未登录用户会被重定向到登录页面"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            # 如果是API请求（POST/PUT/DELETE），返回JSON错误
+            if request.method in ['POST', 'PUT', 'DELETE'] or request.path.startswith('/api/'):
+                return jsonify({'error': '请先登录'}), 401
+            # 如果是页面请求（GET），显示提示并重定向到登录页
+            flash('请先登录', 'warning')
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # ======================== 主页和导航 ========================
 
 @app.route('/')
+@login_required
 def index():
     """主页"""
-    # 查询当前用户的进度数据并传入模板（此处使用测试用户 id=1）
+    # 查询当前用户的进度数据并传入模板（使用session中的用户ID）
     progress_map = {}
     try:
-        progresses = Progress.query.filter_by(user_id=1).all()
+        user_id = session.get('user_id')
+        if user_id:
+            progresses = Progress.query.filter_by(user_id=user_id).all()
+        else:
+            progresses = []
         for p in progresses:
             # 存储为 0~1 的浮点数
             progress_map[p.module_id] = float(p.progress_value) if p.progress_value is not None else 0.0
@@ -67,6 +154,7 @@ def index():
     return render_template('index.html', modules=MODULE_NAVIGATION, progress_map=progress_map)
 
 @app.route('/about')
+@login_required
 def about():
     """关于页面"""
     return render_template('about.html')
@@ -74,6 +162,7 @@ def about():
 # ======================== 模块页面路由 ========================
 
 @app.route('/module/<module_id>')
+@login_required
 def module_detail(module_id):
     """模块详情页面"""
     if module_id in ALL_MODULES:
@@ -87,6 +176,7 @@ def module_detail(module_id):
         return "模块不存在", 404
 
 @app.route('/module/<module_id>/topic/<topic_id>')
+@login_required
 def topic_detail(module_id, topic_id):
     """主题详情页面"""
     if module_id in ALL_MODULES:
@@ -304,8 +394,12 @@ def api_progress():
             except (TypeError, ValueError):
                 quiz = None
 
-        # 临时处理：如果没有登录系统，使用 testuser 作为演示用户
-        user = User.query.filter_by(username='testuser').first()
+        # 使用session中的用户ID
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'error': '用户未登录'}), 401
+        
+        user = User.query.get(user_id)
         if not user:
             return jsonify({'success': False, 'error': '用户不存在'}), 400
 
@@ -365,8 +459,12 @@ def api_get_notes():
     """获取当前用户的笔记列表，支持 q 查询（标题或内容模糊匹配）"""
     try:
         q = request.args.get('q', '').strip()
-        # 暂时使用 testuser 作为示例用户（如有登录，改为 current_user.id）
-        user = User.query.filter_by(username='testuser').first()
+        # 使用session中的用户ID
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': '用户未登录'}), 401
+        
+        user = User.query.get(user_id)
         if not user:
             return jsonify({'error': '用户不存在'}), 400
 
@@ -391,7 +489,11 @@ def api_create_note():
         if not content:
             return jsonify({'error': 'content 不能为空'}), 400
 
-        user = User.query.filter_by(username='testuser').first()
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': '用户未登录'}), 401
+        
+        user = User.query.get(user_id)
         if not user:
             return jsonify({'error': '用户不存在'}), 400
 
@@ -411,7 +513,11 @@ def api_update_note(note_id):
         content = data.get('content', None)
         title = data.get('title', None)
 
-        user = User.query.filter_by(username='testuser').first()
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': '用户未登录'}), 401
+        
+        user = User.query.get(user_id)
         if not user:
             return jsonify({'error': '用户不存在'}), 400
 
@@ -434,7 +540,11 @@ def api_update_note(note_id):
 @app.route('/api/notes/<int:note_id>', methods=['DELETE'])
 def api_delete_note(note_id):
     try:
-        user = User.query.filter_by(username='testuser').first()
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': '用户未登录'}), 401
+        
+        user = User.query.get(user_id)
         if not user:
             return jsonify({'error': '用户不存在'}), 400
 
@@ -456,16 +566,19 @@ def api_delete_note(note_id):
 # ======================== 工具页面 ========================
 
 @app.route('/tools')
+@login_required
 def tools():
     """工具页面"""
     return render_template('tools.html')
 
 @app.route('/tools/regex')
+@login_required
 def regex_tool():
     """正则表达式工具"""
     return render_template('regex_tool.html')
 
 @app.route('/tools/code_playground')
+@login_required
 def code_playground():
     """代码练习场"""
     return render_template('code_playground.html')
@@ -473,6 +586,7 @@ def code_playground():
 # ======================== 搜索功能 ========================
 
 @app.route('/search')
+@login_required
 def search():
     """搜索页面"""
     query = request.args.get('q', '')
@@ -547,17 +661,28 @@ def internal_error(error):
 @app.context_processor
 def inject_navigation():
     """注入导航数据到所有模板"""
-    # 尝试注入当前用户名（当前使用 testuser 作为演示用户）
+    # 从session获取当前登录用户信息
+    current_user = None
+    user_id = None
+    username = 'Guest'
+    
     try:
-        user = User.query.filter_by(username='testuser').first()
-        username = user.username if user else 'Guest'
+        if 'user_id' in session:
+            user_id = session.get('user_id')
+            username = session.get('username', 'Guest')
+            current_user = User.query.get(user_id)
+            if current_user:
+                username = current_user.username
     except Exception:
-        username = 'Guest'
+        pass
 
     return dict(
         navigation_modules=MODULE_NAVIGATION,
         current_year=datetime.now().year,
-        username=username
+        username=username,
+        current_user=current_user,
+        user_id=user_id,
+        is_logged_in=('user_id' in session)
     )
 
 # ======================== 启动应用 ========================

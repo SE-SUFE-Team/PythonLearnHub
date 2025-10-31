@@ -208,7 +208,7 @@
 
                 if (response.ok) {
                     // 登录成功
-                    successText.textContent = `欢迎回来，${data.name || '用户'}！`;
+                    successText.textContent = `欢迎回来，${data.username}！`;
                     successMessage.classList.remove('d-none');
                     
                     // 2秒后跳转到首页

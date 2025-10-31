@@ -26,11 +26,15 @@ window.PythonLearningPlatform = {
     isListening: false
 };
 
+// Markdown-it 渲染器（与 Prism 集成）
+let mdRenderer = null;
+
 /**
  * 文档加载完成后的初始化
  */
 document.addEventListener('DOMContentLoaded', function () {
     initializeApp();
+    initializeMarkdownRenderer();
 });
 
 /**
@@ -64,6 +68,35 @@ function initializeApp() {
     initializeSpeechRecognition();
 
     console.log('✅ Python学习平台初始化完成');
+}
+
+// 初始化 Markdown 渲染器
+function initializeMarkdownRenderer() {
+    if (typeof window.markdownit === 'undefined') {
+        console.warn('markdown-it 未加载，将回退到纯文本显示');
+        return;
+    }
+
+    mdRenderer = window.markdownit({
+        html: false,
+        linkify: true,
+        breaks: true,
+        highlight: function (code, lang) {
+            try {
+                if (typeof Prism !== 'undefined' && lang && Prism.languages[lang]) {
+                    return `<pre class="code-block"><code class="language-${lang}">` +
+                        Prism.highlight(code, Prism.languages[lang], lang) +
+                        '</code></pre>';
+                }
+            } catch (e) {
+                console.warn('代码高亮失败，回退为转义文本', e);
+            }
+            // 回退：不指定语言，避免 XSS
+            const div = document.createElement('div');
+            div.textContent = code;
+            return `<pre class="code-block"><code>` + div.innerHTML + '</code></pre>';
+        }
+    });
 }
 
 /**
@@ -754,6 +787,10 @@ function addMessage(content, sender, isStreaming = false) {
     if (sender === 'ai') {
         // AI消息需要渲染Markdown
         messageText.innerHTML = renderMarkdown(content);
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAllUnder(messageText);
+        }
+        addCopyButtonsToCodeBlocks();
     } else {
         // 用户消息直接显示
         messageText.textContent = content;
@@ -816,7 +853,7 @@ async function callAIAPI(message) {
         const apiConfig = {
             apiKey: 'sk-9b4b1fb4b60d4a69b258ebcb2b5a122b',
             apiUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-            model: 'qwen-plus',
+            model: 'qwen-turbo',            // model: 'qwen-plus',
             // model:'qwen3-coder-plus',
             temperature: 0.7,
             maxTokens: 2000
@@ -918,6 +955,10 @@ async function handleStreamingResponse(response, userMessage) {
 
         requestAnimationFrame(() => {
             messageText.innerHTML = renderMarkdown(fullContent);
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAllUnder(messageText);
+            }
+            addCopyButtonsToCodeBlocks();
 
             // 滚动到底部
             const chatMessages = document.getElementById('chatMessages');
@@ -942,6 +983,10 @@ async function handleStreamingResponse(response, userMessage) {
                     if (data === '[DONE]') {
                         // 最后一次更新
                         messageText.innerHTML = renderMarkdown(fullContent);
+                        if (typeof Prism !== 'undefined') {
+                            Prism.highlightAllUnder(messageText);
+                        }
+                        addCopyButtonsToCodeBlocks();
                         aiMessage.classList.remove('streaming');
 
                         // 滚动到底部
@@ -977,6 +1022,10 @@ async function handleStreamingResponse(response, userMessage) {
 
         // 确保最后内容被渲染
         messageText.innerHTML = renderMarkdown(fullContent);
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAllUnder(messageText);
+        }
+        addCopyButtonsToCodeBlocks();
     } finally {
         aiMessage.classList.remove('streaming');
         reader.releaseLock();
@@ -1008,7 +1057,7 @@ function saveChatHistory(userMessage, aiResponse) {
 
     // 保存到本地存储
     try {
-        localStorage.setItem('aiChatHistory', JSON.stringify(window.PythonLearningPlatform.chatHistory));
+        sessionStorage.setItem('aiChatHistory', JSON.stringify(window.PythonLearningPlatform.chatHistory));
     } catch (e) {
         console.warn('无法保存聊天历史到本地存储:', e);
     }
@@ -1021,7 +1070,7 @@ function saveChatHistory(userMessage, aiResponse) {
  */
 function loadChatHistory() {
     try {
-        const savedHistory = localStorage.getItem('aiChatHistory');
+        const savedHistory = sessionStorage.getItem('aiChatHistory');
         if (savedHistory) {
             window.PythonLearningPlatform.chatHistory = JSON.parse(savedHistory);
             console.log('聊天历史已加载，历史条数:', window.PythonLearningPlatform.chatHistory.length);
@@ -1037,13 +1086,11 @@ function loadChatHistory() {
  */
 function clearChatHistory() {
     window.PythonLearningPlatform.chatHistory = [];
-    localStorage.removeItem('aiChatHistory');
+    sessionStorage.removeItem('aiChatHistory');
     console.log('聊天历史已清空');
 }
 
-// Markdown渲染缓存
-const markdownCache = new Map();
-const MAX_CACHE_SIZE = 50;
+// Markdown 渲染由 markdown-it 提供
 
 /**
  * 增强的Markdown渲染器
@@ -1051,135 +1098,12 @@ const MAX_CACHE_SIZE = 50;
  */
 function renderMarkdown(text) {
     if (!text) return '';
-
-    // 检查缓存
-    if (markdownCache.has(text)) {
-        return markdownCache.get(text);
+    if (!mdRenderer) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return `<p class="markdown-p">${div.innerHTML}</p>`;
     }
-
-    const originalText = text;
-
-    // 占位符数组，用于临时存储已处理的表格
-    const tablePlaceholders = [];
-    let tablePlaceholderIndex = 0;
-
-    // 首先处理表格（在转义HTML之前）
-    // 匹配表格的正则：表头行 | 分隔行 | 数据行（支持多行）
-    const tableRegex = /(\|[^\n]+\|)\s*\n\s*(\|[-: \|]+\|)\s*\n((?:\|[^\n]+\|\s*\n?)+)/g;
-
-    text = text.replace(tableRegex, (match, headerRow, separatorRow, rowsPart) => {
-        try {
-            // 解析表头
-            const headerCells = headerRow.split('|')
-                .map(cell => cell.trim())
-                .filter(cell => cell.length > 0)
-                .map(cell => escapeHtml(cell))
-                .map(cell => `<th class="markdown-th">${cell}</th>`)
-                .join('');
-
-            // 解析表格行 - 先获取所有行
-            const allRowLines = rowsPart.split('\n');
-            const tableRows = allRowLines
-                .filter(row => {
-                    const trimmed = row.trim();
-                    return trimmed.length > 0 && trimmed.startsWith('|') && trimmed.endsWith('|');
-                })
-                .map(row => {
-                    const cells = row.split('|')
-                        .map(cell => cell.trim())
-                        .filter(cell => cell.length > 0)
-                        .map(cell => escapeHtml(cell))
-                        .map(cell => `<td class="markdown-td">${cell}</td>`)
-                        .join('');
-                    return `<tr class="markdown-tr">${cells}</tr>`;
-                })
-                .join('');
-
-            if (headerCells && tableRows) {
-                const tableHtml = `<table class="markdown-table"><thead><tr class="markdown-tr">${headerCells}</tr></thead><tbody>${tableRows}</tbody></table>`;
-                const placeholder = `__TABLE_PLACEHOLDER_${tablePlaceholderIndex}__`;
-                tablePlaceholders.push(tableHtml);
-                tablePlaceholderIndex++;
-                return placeholder;
-            }
-            return match;
-        } catch (e) {
-            console.error('表格解析错误:', e);
-            return match;
-        }
-    });
-
-    // 转义HTML特殊字符
-    text = escapeHtml(text);
-
-    // 恢复表格占位符（在转义之后）
-    tablePlaceholders.forEach((tableHtml, index) => {
-        text = text.replace(`__TABLE_PLACEHOLDER_${index}__`, tableHtml);
-    });
-
-    // 处理代码块（在转义和恢复表格之后）
-    // 支持多种代码块格式：```lang\n代码``` 或  ```代码```（无语言标识）
-    text = text.replace(/```(\w+)?([\s\S]*?)```/g, (match, lang, code) => {
-        const language = lang || 'text';
-        // 不调用 trim()，保留代码块的原始格式和缩进
-        const codeContent = unescapeHtml(code);
-
-        // 移除前导的换行符（如果有）
-        const trimmedCode = codeContent.replace(/^\n+/, '');
-
-        return `<pre class="code-block"><code class="language-${language}">${trimmedCode}</code></pre>`;
-    });
-
-    // 行内代码
-    text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-    // 标题 (支持多级)
-    text = text.replace(/^### (.*$)/gim, '<h3 class="markdown-h3">$1</h3>');
-    text = text.replace(/^## (.*$)/gim, '<h2 class="markdown-h2">$1</h2>');
-    text = text.replace(/^# (.*$)/gim, '<h1 class="markdown-h1">$1</h1>');
-
-    // 粗体和斜体
-    text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="markdown-bold">$1</strong>');
-    text = text.replace(/\*(.*?)\*/g, '<em class="markdown-italic">$1</em>');
-
-    // 删除线
-    text = text.replace(/~~(.*?)~~/g, '<del class="markdown-strikethrough">$1</del>');
-
-    // 链接
-    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="markdown-link">$1</a>');
-
-    // 无序列表
-    text = text.replace(/^[\*\-\+] (.+)$/gm, '<li class="markdown-li">$1</li>');
-    text = text.replace(/(<li class="markdown-li">.*<\/li>)/s, '<ul class="markdown-ul">$1</ul>');
-
-    // 有序列表
-    text = text.replace(/^\d+\. (.+)$/gm, '<li class="markdown-li">$1</li>');
-    text = text.replace(/(<li class="markdown-li">.*<\/li>)/s, '<ol class="markdown-ol">$1</ol>');
-
-    // 引用块
-    text = text.replace(/^> (.+)$/gm, '<blockquote class="markdown-blockquote">$1</blockquote>');
-
-    // 水平分割线
-    text = text.replace(/^---$/gm, '<hr class="markdown-hr">');
-
-    // 换行处理
-    text = text.replace(/\n\n/g, '</p><p class="markdown-p">');
-    text = text.replace(/\n/g, '<br>');
-
-    // 包装段落
-    if (!text.startsWith('<')) {
-        text = `<p class="markdown-p">${text}</p>`;
-    }
-
-    // 缓存结果
-    if (markdownCache.size >= MAX_CACHE_SIZE) {
-        // 删除最旧的缓存项
-        const firstKey = markdownCache.keys().next().value;
-        markdownCache.delete(firstKey);
-    }
-    markdownCache.set(originalText, text);
-
-    return text;
+    return mdRenderer.render(text);
 }
 
 // 导出到全局作用域

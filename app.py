@@ -2,6 +2,7 @@
 Python学习平台 - 主应用
 整合所有Python学习模块的Web应用
 """
+import os
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 from functools import wraps
@@ -19,7 +20,8 @@ from sqlalchemy import desc
 from models.progress import Progress
 from models.notes import Note
 from sqlalchemy.exc import IntegrityError
-
+from utils.judge import judge_engine
+from models.problem import Problem, Submission
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'python_learning_platform_2024'
 
@@ -209,7 +211,7 @@ def execute_code():
         
         code = data.get('code', '').strip()
         inputs = data.get('inputs', None)
-        user_id = data.get('user_id')
+        user_id = session.get('user_id')
 
         if not code:
             return jsonify({
@@ -262,8 +264,8 @@ def execute_code():
 def get_execution_history():
     """查询代码执行历史记录"""
     try:
-        user_id = request.args.get('user_id', 1, type=int)  # 从查询参数获取用户ID
-        record_type = request.args.get('type', 0, type=int)  # 可选的记录类型过滤
+        user_id = session.get('user_id')
+        record_type = request.args.get('type', 0, type=int)
 
         # 构建查询
         query = CodeExecution.query.filter_by(user_id=user_id)
@@ -313,7 +315,7 @@ def get_execution_detail(record_id):
 def clear_execution_history():
     """清空执行历史记录"""
     try:
-        user_id = request.args.get('user_id', 1, type=int)
+        user_id = session.get('user_id')
         CodeExecution.query.filter_by(user_id=user_id).delete()
         db.session.commit()
         return jsonify({
@@ -327,6 +329,150 @@ def clear_execution_history():
             'error': f'清空失败: {str(e)}'
         })
 
+
+# ======================== Online Judge 功能 ========================
+
+@app.route('/oj')
+@login_required
+def oj_home():
+    """OJ 主页"""
+    return render_template('oj_home.html')
+
+
+@app.route('/api/oj/problems', methods=['GET'])
+def api_get_problems():
+    """获取所有题目列表"""
+    try:
+        problems = []
+        data_dir = './Data'
+
+        for filename in os.listdir(data_dir):
+            if filename.startswith('problem_') and filename.endswith('.json'):
+                problem_id = filename.replace('problem_', '').replace('.json', '')
+                problem_data = judge_engine.load_problem(problem_id)
+                if problem_data:
+                    problems.append({
+                        'id': problem_data.get('id', problem_id),
+                        'title': problem_data.get('title', ''),
+                        'description': problem_data.get('description', '')[:100] + '...'
+                    })
+
+        return jsonify({
+            'success': True,
+            'problems': sorted(problems, key=lambda x: int(x['id']))
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/api/oj/problem/<problem_id>', methods=['GET'])
+def api_get_problem_detail(problem_id):
+    """获取题目详情"""
+    try:
+        problem = judge_engine.load_problem(problem_id)
+        if not problem:
+            return jsonify({
+                'success': False,
+                'error': '题目不存在'
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'problem': problem
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/api/oj/submit', methods=['POST'])
+@login_required
+def api_submit_code():
+    """提交代码进行判题"""
+    try:
+        data = request.get_json()
+        problem_id = data.get('problem_id')
+        code = data.get('code', '').strip()
+
+        if not problem_id or not code:
+            return jsonify({
+                'success': False,
+                'error': '题目ID和代码不能为空'
+            }), 400
+
+        judge_result = judge_engine.judge(problem_id, code)
+
+        if not judge_result.get('success'):
+            return jsonify(judge_result), 400
+
+        # 保存提交记录
+        user_id = session.get('user_id')
+        submission = Submission(
+            user_id=user_id,
+            problem_id=problem_id,
+            code=code,
+            status=judge_result['status'],
+            passed_cases=judge_result['passed'],
+            total_cases=judge_result['total'],
+            error_message=json.dumps(judge_result.get('failed_case')),
+            execution_time=judge_result['execution_time']
+        )
+        db.session.add(submission)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'submission_id': submission.id,
+            'result': judge_result
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+
+@app.route('/api/oj/submissions', methods=['GET'])
+@login_required
+def api_get_submissions():
+    """获取用户提交记录"""
+    try:
+        user_id = session.get('user_id')
+        problem_id = request.args.get('problem_id', type=int)
+
+        query = Submission.query.filter_by(user_id=user_id)
+        if problem_id:
+            query = query.filter_by(problem_id=problem_id)
+
+        submissions = query.order_by(Submission.submitted_at.desc()).limit(20).all()
+
+        return jsonify({
+            'success': True,
+            'submissions': [s.to_dict() for s in submissions]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@app.route('/oj/problem/<problem_id>')
+@login_required
+def oj_problem_detail(problem_id):
+    """题目详情页面"""
+    problem = judge_engine.load_problem(problem_id)
+    if not problem:
+        return "题目不存在", 404
+    return render_template('oj_problem.html', problem=problem)
 # ======================== 模块特定API ========================
 
 @app.route('/api/regex/test', methods=['POST'])

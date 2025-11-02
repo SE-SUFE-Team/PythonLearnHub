@@ -31,6 +31,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+# ======================== Jinja2 过滤器 ========================
+
+@app.template_filter('format_account_id')
+def format_account_id(user_id):
+    """将用户ID格式化为8位数字字符串（例如：2 -> 00000002）"""
+    return str(user_id).zfill(8)
+
 with app.app_context():
     db.create_all()
     # 插入测试用户
@@ -67,9 +74,7 @@ def register():
     if not username or not password or not email:
         return jsonify({'error': '用户名、密码和邮箱不能为空'}), 400
 
-    if User.query.filter_by(username=username).first():
-        return jsonify({'error': '用户名已存在'}), 400
-
+    # 只检查邮箱唯一性，用户名允许重复
     if User.query.filter_by(email=email).first():
         return jsonify({'error': '邮箱已存在'}), 400
 

@@ -1,0 +1,13 @@
+{
+  "problem_id": 2,
+  "testcases": [
+    {
+      "input": [2,3,4,6],
+      "expected_output": 8
+    },
+    {
+      "input": [1,2,4,5,10],
+      "expected_output": 16
+    }
+  ]
+}

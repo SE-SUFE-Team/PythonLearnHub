@@ -1,0 +1,13 @@
+{
+  "problem_id": 4,
+  "testcases": [
+    {
+      "input": [[1,2,3,4,5],2],
+      "expected_output": [1,2,3,5]
+    },
+    {
+      "input": [[1],1],
+      "expected_output": []
+    }
+  ]
+}

@@ -12,6 +12,8 @@ import traceback
 from datetime import datetime
 from models import db
 from models.user import User
+from models.code_execution import CodeExecution
+from sqlalchemy import desc
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'python_learning_platform_2024'
@@ -101,6 +103,7 @@ def execute_code():
         
         code = data.get('code', '').strip()
         inputs = data.get('inputs', None)
+        user_id = data.get('user_id')
         
         if not code:
             return jsonify({
@@ -113,7 +116,32 @@ def execute_code():
         
         # 添加执行时间戳
         result['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
+        try:
+            execution_record = CodeExecution(
+                user_id=user_id,
+                code=code,
+                record_type=0  # 通用历史记录
+            )
+            db.session.add(execution_record)
+
+            # 保持该用户最多10条记录
+            user_count = CodeExecution.query.filter_by(user_id=user_id).count()
+            if user_count > 10:
+                # 删除该用户最旧的记录
+                oldest_records = CodeExecution.query.filter_by(
+                    user_id=user_id
+                ).order_by(
+                    CodeExecution.executed_at
+                ).limit(user_count - 10).all()
+                for record in oldest_records:
+                    db.session.delete(record)
+
+            db.session.commit()
+            result['record_id'] = execution_record.id
+        except Exception as db_error:
+            db.session.rollback()
+            print(f"⚠️ 保存执行历史失败: {str(db_error)}")
+
         return jsonify(result)
         
     except Exception as e:
@@ -121,6 +149,76 @@ def execute_code():
             'success': False,
             'error': f'服务器错误: {str(e)}',
             'traceback': traceback.format_exc()
+        })
+
+
+@app.route('/api/executions/history', methods=['GET'])
+def get_execution_history():
+    """查询代码执行历史记录"""
+    try:
+        user_id = request.args.get('user_id', 1, type=int)  # 从查询参数获取用户ID
+        record_type = request.args.get('type', 0, type=int)  # 可选的记录类型过滤
+
+        # 构建查询
+        query = CodeExecution.query.filter_by(user_id=user_id)
+        if record_type is not None:
+            query = query.filter_by(record_type=record_type)
+
+        # 获取最近的10条记录,按时间倒序
+        executions = query.order_by(
+            desc(CodeExecution.executed_at)
+        ).limit(10).all()
+
+        return jsonify({
+            'success': True,
+            'count': len(executions),
+            'records': [execution.to_dict() for execution in executions]
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'查询失败: {str(e)}'
+        })
+
+
+@app.route('/api/executions/<int:record_id>', methods=['GET'])
+def get_execution_detail(record_id):
+    """获取特定执行记录的详情"""
+    try:
+        execution = CodeExecution.query.get(record_id)
+        if not execution:
+            return jsonify({
+                'success': False,
+                'error': '记录不存在'
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'record': execution.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'查询失败: {str(e)}'
+        })
+
+
+@app.route('/api/executions/clear', methods=['POST'])
+def clear_execution_history():
+    """清空执行历史记录"""
+    try:
+        user_id = request.args.get('user_id', 1, type=int)
+        CodeExecution.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': '历史记录已清空'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'清空失败: {str(e)}'
         })
 
 # ======================== 模块特定API ========================

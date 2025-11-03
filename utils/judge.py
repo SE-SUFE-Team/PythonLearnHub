@@ -25,7 +25,7 @@ class JudgeEngine:
     def load_testcases(self, problem_id):
         """加载测试用例"""
         try:
-            testcase_file = os.path.join(self.data_dir, f'testcase_{problem_id}.json')
+            testcase_file = os.path.join(self.data_dir, f'test_case_{problem_id}.json')
             with open(testcase_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('testcases', [])

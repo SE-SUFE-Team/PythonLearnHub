@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block title %}做题训练 - Python学习平台{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0"><i class="fas fa-trophy"></i> 做题训练</h2>
+        <div class="d-flex gap-2 controls-equal-height">
+            <label for="problem-select" class="form-label mb-0 d-flex align-items-center text-nowrap">选择题目:</label>
+            <select id="problem-select" class="form-select" style="min-width: 260px;"></select>
+            <button id="refresh-problems" class="btn btn-outline-secondary d-flex align-items-center"><i
+                    class="fas fa-rotate me-1"></i> 刷新</button>
+            <button id="open-submissions" class="btn btn-outline-info d-flex align-items-center"><i
+                    class="fas fa-history me-1"></i> 提交历史</button>
+        </div>
+    </div>
+    <!-- 当前用户上下文（用于草稿按用户隔离） -->
+    <span id="user-context"
+        data-user-id="{% if is_logged_in and current_user %}{{ current_user.id }}{% else %}{% endif %}"
+        style="display:none;"></span>
+    <div class="col-12 mt-2 text-muted">从题目列表中选择一个题目查看详情并进行代码提交判题</div>
+    <div id="problem-load-error" class="col-12 mt-3" style="display:none;"></div>
+    <div id="problem-loading" class="col-12 mt-3" style="display:none;">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span></div>
+        <span class="ms-2 text-muted">正在加载题目...</span>
+    </div>
+    <div id="problem-empty" class="col-12 mt-3" style="display:none;">
+        <div class="alert alert-light border text-muted"><i class="fas fa-inbox me-2"></i>暂无题目</div>
+    </div>
+    <div id="problem-loaded" class="col-12 mt-3" style="display:none;"></div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-file-alt"></i> 题目详情</h5>
+            </div>
+            <div class="card-body" id="problem-detail">
+                <div class="text-muted">请选择上方的题目以查看详情</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-code"></i> 代码提交</h5>
+                <div class="d-flex gap-2">
+                    <button id="format-code" class="btn btn-sm btn-outline-secondary"><i class="fas fa-magic"></i>
+                        格式化</button>
+                    <button id="submit-code" class="btn btn-sm btn-success"><i class="fas fa-paper-plane"></i>
+                        提交判题</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="oj-editor" style="min-height: 260px;"></div>
+                <hr class="my-0">
+                <div class="p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0"><i class="fas fa-terminal"></i> 运行/判题结果</h6>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" id="toggle-error-detail"
+                                style="display:none;">
+                                <i class="fas fa-chevron-down"></i> 查看错误详情
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" id="clear-result-btn">
+                                <i class="fas fa-eraser"></i> 清空结果
+                            </button>
+                        </div>
+                    </div>
+                    <div id="oj-output" class="code-output-area bg-dark text-light p-3 rounded mb-2">
+                        <pre class="mb-0">提交后在此显示判题结果...</pre>
+                    </div>
+                    <div id="oj-failed-detail" class="card" style="display:none;">
+                        <div class="card-header py-2"><small class="text-muted">失败用例详情</small></div>
+                        <div class="card-body p-2">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4">
+                                    <div class="small text-muted">输入</div>
+                                    <pre class="bg-light p-2 rounded small mb-0" id="fd-input"></pre>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="small text-muted">期望</div>
+                                    <pre class="bg-light p-2 rounded small mb-0" id="fd-expected"></pre>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="small text-muted">实际</div>
+                                    <pre class="bg-light p-2 rounded small mb-0" id="fd-actual"></pre>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="small text-muted">错误</div>
+                                <pre class="bg-light p-2 rounded small mb-0" id="fd-error"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="small text-muted" id="submit-info"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 提交历史 Modal -->
+<div class="modal fade" id="submissionModal" tabindex="-1" aria-labelledby="submissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submissionModalLabel"><i class="fas fa-history"></i> 提交历史</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <label for="submission-status-filter" class="form-label mb-0 small text-muted">状态筛选:</label>
+                    <select id="submission-status-filter" class="form-select form-select-sm" style="width:auto;">
+                        <option value="ALL">全部</option>
+                        <option value="AC">AC</option>
+                        <option value="WA">WA</option>
+                        <option value="TLE">TLE</option>
+                        <option value="RE">RE</option>
+                        <option value="CE">CE</option>
+                    </select>
+                </div>
+                <div id="submission-loading" class="text-center py-4" style="display:none;">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">加载中...</span>
+                    </div>
+                    <div class="text-muted mt-2">正在加载提交历史...</div>
+                </div>
+                <div id="submission-empty" class="text-center py-4" style="display:none;">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <div class="text-muted">暂无提交记录</div>
+                </div>
+                <div id="submission-error" style="display:none;"></div>
+                <div id="submission-list" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .code-output-area {
+        min-height: 200px;
+        max-height: 360px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .status-badge {
+        font-weight: 600;
+    }
+
+    .submission-item {
+        border-left: 4px solid transparent;
+    }
+
+    .submission-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* 控件等高：标签、下拉、按钮高度一致 */
+    .controls-equal-height>* {
+        height: 38px;
+    }
+
+    .controls-equal-height .form-label {
+        padding: 0 8px;
+        white-space: nowrap;
+    }
+
+    .controls-equal-height .btn {
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .controls-equal-height .form-select {
+        height: 38px;
+    }
+
+    /* 题目详情：设置最低高度，超出后自适应 */
+    #problem-detail {
+        min-height: 320px;
+    }
+
+    /* 失败用例详情：即使内容为空也保持可见底色与高度 */
+    #oj-failed-detail pre {
+        min-height: 2.25rem;
+        /* 行高约 36px */
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let problemList = [];
+    let currentProblemId = null;
+    let codeMirrorEditor = null;
+    let lastSubmissionsCache = [];
+    let currentStatusFilter = 'ALL';
+    let currentUserId = null;
+    const draftSaveDebounceMs = 400;
+    let draftSaveTimer = null;
+
+    function getDraftKey(problemId) {
+        const uidPart = currentUserId ? String(currentUserId) : 'guest';
+        return `oj_draft_${uidPart}_${problemId}`;
+    }
+
+    function saveDraft(problemId, code) {
+        if (!problemId) return;
+        try { sessionStorage.setItem(getDraftKey(problemId), code || ''); } catch (e) { }
+    }
+
+    function loadDraft(problemId) {
+        if (!problemId) return '';
+        try { return sessionStorage.getItem(getDraftKey(problemId)) || ''; } catch (e) { return ''; }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initEditor();
+        bindEvents();
+        // 读取用户上下文（用于草稿隔离）
+        const uc = document.getElementById('user-context');
+        if (uc && uc.dataset && uc.dataset.userId) {
+            currentUserId = uc.dataset.userId;
+        }
+        loadProblems();
+    });
+
+    function initEditor() {
+        const editorHost = document.getElementById('oj-editor');
+        codeMirrorEditor = CodeMirror(editorHost, {
+            mode: 'python',
+            theme: 'monokai',
+            lineNumbers: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            lineWrapping: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            placeholder: "# 在这里编写解题代码\nprint('Hello OJ')",
+            extraKeys: {
+                "Ctrl-Enter": function () { submitCurrentCode(); }
+            }
+        });
+        // 编辑时自动保存草稿（按题目）
+        codeMirrorEditor.on('change', function () {
+            if (!currentProblemId) return;
+            if (draftSaveTimer) clearTimeout(draftSaveTimer);
+            draftSaveTimer = setTimeout(function () {
+                saveDraft(currentProblemId, codeMirrorEditor.getValue());
+            }, draftSaveDebounceMs);
+        });
+    }
+
+    function bindEvents() {
+        document.getElementById('refresh-problems').addEventListener('click', loadProblems);
+        document.getElementById('problem-select').addEventListener('change', function () {
+            const id = this.value;
+            if (!id) return;
+            const prevId = currentProblemId;
+            // 切换前保存上一题草稿
+            if (prevId && codeMirrorEditor) {
+                saveDraft(prevId, codeMirrorEditor.getValue());
+            }
+            currentProblemId = id;
+            // 切换后恢复该题草稿
+            if (codeMirrorEditor) {
+                const draft = loadDraft(id);
+                codeMirrorEditor.setValue(draft || '');
+            }
+            // 切换题目时清空运行/判题结果与错误详情
+            (function resetResultArea() {
+                const outputPre = document.getElementById('oj-output')?.querySelector('pre');
+                const infoEl = document.getElementById('submit-info');
+                const toggleBtn = document.getElementById('toggle-error-detail');
+                const failedPanel = document.getElementById('oj-failed-detail');
+                if (outputPre) outputPre.textContent = '提交后在此显示判题结果...';
+                if (infoEl) infoEl.textContent = '';
+                if (toggleBtn) toggleBtn.style.display = 'none';
+                if (failedPanel) failedPanel.style.display = 'none';
+            })();
+            loadProblemDetail(id);
+            loadSubmissions(id);
+        });
+        document.getElementById('format-code').addEventListener('click', formatCode);
+        document.getElementById('submit-code').addEventListener('click', submitCurrentCode);
+        const openBtn = document.getElementById('open-submissions');
+        if (openBtn) {
+            openBtn.addEventListener('click', function () {
+                const modal = new bootstrap.Modal(document.getElementById('submissionModal'));
+                modal.show();
+                loadSubmissions(currentProblemId);
+            });
+        }
+
+        const filterSel = document.getElementById('submission-status-filter');
+        if (filterSel) {
+            filterSel.addEventListener('change', function () {
+                currentStatusFilter = this.value || 'ALL';
+                renderSubmissionsFromCache();
+            });
+        }
+
+        const clearResultBtn = document.getElementById('clear-result-btn');
+        if (clearResultBtn) {
+            clearResultBtn.addEventListener('click', function () {
+                const output = document.getElementById('oj-output').querySelector('pre');
+                const info = document.getElementById('submit-info');
+                const toggleBtn = document.getElementById('toggle-error-detail');
+                const panel = document.getElementById('oj-failed-detail');
+                if (output) output.textContent = '提交后在此显示判题结果...';
+                if (info) info.textContent = '';
+                if (toggleBtn) toggleBtn.style.display = 'none';
+                if (panel) panel.style.display = 'none';
+            });
+        }
+    }
+
+    function loadProblems() {
+        toggleProblemState('loading');
+        fetch('/api/oj/problems')
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) throw new Error(data.error || '获取题目失败');
+                problemList = data.problems || [];
+                renderProblemSelect(problemList);
+                toggleProblemState(problemList.length ? 'loaded' : 'empty');
+            })
+            .catch(err => {
+                showProblemError(err.message || '加载失败');
+            });
+    }
+
+    function renderProblemSelect(list) {
+        const sel = document.getElementById('problem-select');
+        sel.innerHTML = '';
+        if (!list || list.length === 0) return;
+        list.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = `${p.id}. ${p.title}`;
+            sel.appendChild(opt);
+        });
+        // 选中第一题并加载
+        sel.value = list[0].id;
+        currentProblemId = list[0].id;
+        // 初次进入尝试恢复草稿
+        if (codeMirrorEditor) {
+            const draft = loadDraft(currentProblemId);
+            if (draft) codeMirrorEditor.setValue(draft);
+        }
+        loadProblemDetail(currentProblemId);
+        loadSubmissions(currentProblemId);
+    }
+
+    function loadProblemDetail(problemId) {
+        const detail = document.getElementById('problem-detail');
+        detail.innerHTML = '<div class="text-muted">加载中...</div>';
+        fetch(`/api/oj/problem/${problemId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) throw new Error(data.error || '获取题目详情失败');
+                const p = data.problem;
+                detail.innerHTML = `
+                    <h5 class="mb-2">${escapeHtml(p.title || '')}</h5>
+                    <div class="mb-2"><span class="badge bg-primary me-2">ID: ${escapeHtml(p.id)}</span></div>
+                    <hr/>
+                    <div style="white-space: pre-wrap;">${escapeHtml(p.description || '')}</div>
+                `;
+            })
+            .catch(err => {
+                detail.innerHTML = `<div class="alert alert-danger">${escapeHtml(err.message || '加载失败')}</div>`;
+            });
+    }
+
+    function submitCurrentCode() {
+        const submitBtn = document.getElementById('submit-code');
+        const info = document.getElementById('submit-info');
+        const output = document.getElementById('oj-output').querySelector('pre');
+        const code = (codeMirrorEditor && codeMirrorEditor.getValue()) || '';
+        if (!currentProblemId) {
+            info.textContent = '请先选择题目';
+            return;
+        }
+        if (!code.trim()) {
+            info.textContent = '请先输入代码';
+            return;
+        }
+
+        const start = Date.now();
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner"></span> 提交中...';
+        info.textContent = '';
+        output.textContent = '判题中...';
+
+        fetch('/api/oj/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ problem_id: currentProblemId, code })
+        })
+            .then(r => r.json())
+            .then(data => {
+                const elapsed = ((Date.now() - start) / 1000).toFixed(3);
+                if (!data.success) {
+                    info.innerHTML = `<i class="fas fa-times text-danger"></i> 提交失败 (${elapsed}s)`;
+                    output.textContent = data.error || '提交失败';
+                    return;
+                }
+                const res = data.result || {};
+                const status = res.status || 'UNKNOWN';
+                const passed = res.passed ?? 0;
+                const total = res.total ?? 0;
+                const execTime = res.execution_time ?? '-';
+                // 提取错误信息（如 ImportError 等）
+                let errMsg = '';
+                if (res.error) errMsg = String(res.error);
+                else if (res.failed_case && (res.failed_case.error || res.failed_case.message)) {
+                    errMsg = String(res.failed_case.error || res.failed_case.message);
+                }
+                info.innerHTML = `<i class=\"fas fa-check text-success\"></i> 提交成功 (${elapsed}s)`;
+                output.textContent = `状态: ${status}\n通过用例: ${passed}/${total}\n执行时间: ${execTime} ms${errMsg ? `\n错误: ${errMsg}` : ''}`;
+                renderFailedCase(res.failed_case);
+                loadSubmissions(currentProblemId);
+            })
+            .catch(err => {
+                info.innerHTML = `<i class="fas fa-times text-danger"></i> 网络错误`;
+                output.textContent = err.message || '网络错误';
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交判题';
+            });
+    }
+
+    function loadSubmissions(problemId) {
+        const loading = document.getElementById('submission-loading');
+        const empty = document.getElementById('submission-empty');
+        const errorBox = document.getElementById('submission-error');
+        const listHost = document.getElementById('submission-list');
+        if (loading && empty && errorBox && listHost) {
+            loading.style.display = 'block';
+            empty.style.display = 'none';
+            errorBox.style.display = 'none';
+            listHost.style.display = 'none';
+            listHost.innerHTML = '';
+        }
+        const qs = problemId ? `?problem_id=${encodeURIComponent(problemId)}` : '';
+        fetch(`/api/oj/submissions${qs}`)
+            .then(r => r.json())
+            .then(data => {
+                if (loading) loading.style.display = 'none';
+                if (!data.success) throw new Error(data.error || '加载失败');
+                lastSubmissionsCache = data.submissions || [];
+                if (lastSubmissionsCache.length === 0) {
+                    if (empty) empty.style.display = 'block';
+                    return;
+                }
+                renderSubmissionsFromCache();
+            })
+            .catch(err => {
+                if (loading) loading.style.display = 'none';
+                if (errorBox) {
+                    errorBox.innerHTML = `<div class="alert alert-danger">${escapeHtml(err.message || '加载失败')}</div>`;
+                    errorBox.style.display = 'block';
+                }
+            });
+    }
+
+    function renderSubmissionsFromCache() {
+        const listHost = document.getElementById('submission-list');
+        const empty = document.getElementById('submission-empty');
+        if (!listHost) return;
+        listHost.innerHTML = '';
+        let filtered = lastSubmissionsCache || [];
+        if (currentStatusFilter && currentStatusFilter !== 'ALL') {
+            filtered = filtered.filter(s => (s.status || '').toUpperCase() === currentStatusFilter);
+        }
+        if (filtered.length === 0) {
+            if (empty) empty.style.display = 'block';
+            return;
+        }
+        if (empty) empty.style.display = 'none';
+        const frag = document.createDocumentFragment();
+        filtered.forEach(s => frag.appendChild(renderSubmissionItem(s)));
+        listHost.appendChild(frag);
+        listHost.style.display = 'block';
+    }
+
+    function renderSubmissionItem(s) {
+        const div = document.createElement('div');
+        div.className = 'card mb-2 submission-item';
+        const statusClass = mapStatusToClass(s.status);
+        div.style.borderLeftColor = statusClass.color;
+        const fullCode = s.code || '';
+        const err = s.error_message ? formatErrorMessage(s.error_message) : '';
+        div.innerHTML = `
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${statusClass.badge} status-badge">${escapeHtml(s.status || '—')}</span>
+                        <small class="text-muted">${escapeHtml(s.submitted_at || '')}</small>
+                    </div>
+                    <span class="badge bg-secondary" style="background-color: #93aec1 !important;">#${s.id}</span>
+                </div>
+                <div class="small text-muted">用例: ${s.passed_cases ?? 0}/${s.total_cases ?? 0} | 时间: ${s.execution_time ?? '-'} ms</div>
+                ${err ? `<div class=\"mt-2\"><span class=\"badge bg-danger me-2\">错误</span><span class=\"text-danger\">${escapeHtml(err)}</span></div>` : ''}
+                <pre class="bg-dark text-light p-2 rounded mt-2 mb-0" style="font-size: 12px; max-height: 14em; overflow: auto; white-space: pre-wrap;">${escapeHtml(fullCode)}</pre>
+            </div>
+        `;
+        return div;
+    }
+
+    function formatErrorMessage(msg) {
+        try {
+            const obj = JSON.parse(msg);
+            if (obj && typeof obj === 'object') {
+                if (obj.error) return String(obj.error);
+                if (obj.message) return String(obj.message);
+                if (obj.detail) return String(obj.detail);
+                if (obj.type) return String(obj.type);
+            }
+            return String(msg);
+        } catch (_) {
+            return String(msg);
+        }
+    }
+
+    function mapStatusToClass(status) {
+        const k = (status || '').toUpperCase();
+        switch (k) {
+            case 'AC': return { badge: 'bg-success', color: '#28a745' };
+            case 'WA': return { badge: 'bg-danger', color: '#dc3545' };
+            case 'TLE': return { badge: 'bg-warning text-dark', color: '#ffc107' };
+            case 'RE': return { badge: 'bg-secondary', color: '#6c757d' };
+            case 'CE': return { badge: 'bg-info text-dark', color: '#0dcaf0' };
+            default: return { badge: 'bg-dark', color: '#343a40' };
+        }
+    }
+
+    function formatCode() {
+        if (!codeMirrorEditor) return;
+        const code = codeMirrorEditor.getValue();
+        const lines = code.split('\n');
+        let indentLevel = 0;
+        const out = [];
+        lines.forEach(line => {
+            const t = line.trim();
+            if (!t) { out.push(''); return; }
+            if (t.startsWith('else') || t.startsWith('elif') || t.startsWith('except') || t.startsWith('finally')) {
+                indentLevel = Math.max(0, indentLevel - 1);
+            }
+            out.push('    '.repeat(indentLevel) + t);
+            if (t.endsWith(':')) indentLevel++;
+            if (!t.startsWith(' ') && !t.endsWith(':') && !t.startsWith('else') && !t.startsWith('elif') && !t.startsWith('except') && !t.startsWith('finally')) {
+                indentLevel = 0;
+            }
+        });
+        codeMirrorEditor.setValue(out.join('\n'));
+    }
+
+
+    // ===== 失败用例详情渲染与折叠 =====
+    function renderFailedCase(failed) {
+        const toggleBtn = document.getElementById('toggle-error-detail');
+        const panel = document.getElementById('oj-failed-detail');
+        const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+        if (failed && (failed.input || failed.expected || failed.actual || failed.error || failed.message)) {
+            setText('fd-input', stringifyMaybeJson(failed.input));
+            setText('fd-expected', stringifyMaybeJson(failed.expected));
+            setText('fd-actual', stringifyMaybeJson(failed.actual));
+            setText('fd-error', failed.error || failed.message || '');
+            if (toggleBtn && panel) {
+                toggleBtn.style.display = '';
+                panel.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i> 查看错误详情';
+                toggleBtn.onclick = () => {
+                    const showing = panel.style.display !== 'none';
+                    panel.style.display = showing ? 'none' : '';
+                    toggleBtn.innerHTML = showing ? '<i class="fas fa-chevron-down"></i> 查看错误详情' : '<i class="fas fa-chevron-up"></i> 收起错误详情';
+                };
+            }
+        } else {
+            if (toggleBtn) toggleBtn.style.display = 'none';
+            if (panel) panel.style.display = 'none';
+        }
+    }
+    function stringifyMaybeJson(v) {
+        if (v == null) return '';
+        if (typeof v === 'string') return v;
+        try { return JSON.stringify(v); } catch (_) { return String(v); }
+    }
+
+    function toggleProblemState(state) {
+        document.getElementById('problem-loading').style.display = (state === 'loading') ? 'block' : 'none';
+        document.getElementById('problem-empty').style.display = (state === 'empty') ? 'block' : 'none';
+        document.getElementById('problem-loaded').style.display = (state === 'loaded') ? 'block' : 'none';
+        document.getElementById('problem-load-error').style.display = (state === 'error') ? 'block' : 'none';
+    }
+
+    function showProblemError(msg) {
+        const box = document.getElementById('problem-load-error');
+        box.innerHTML = `<div class="alert alert-danger">${escapeHtml(msg)}</div>`;
+        toggleProblemState('error');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = (text ?? '').toString();
+        return div.innerHTML;
+    }
+</script>
+{% endblock %}

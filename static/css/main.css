@@ -415,6 +415,14 @@ body {
     background-color: var(--dark-color) !important;
 }
 
+.badge.bg-secondary {
+    background-color: #93aec1 !important;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
 /* ========== 示例项目样式 ========== */
 .example-item {
     border-left: 4px solid var(--primary-color);

@@ -41,6 +41,7 @@ class Submission(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'problem_id': self.problem_id,
+            'code': self.code,
             'status': self.status,
             'passed_cases': self.passed_cases,
             'total_cases': self.total_cases,

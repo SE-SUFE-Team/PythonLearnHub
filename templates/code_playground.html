@@ -38,6 +38,9 @@
                 <button id="format-code" class="btn btn-outline-secondary">
                     <i class="fas fa-magic"></i> 格式化
                 </button>
+                <button id="history-btn" class="btn btn-outline-info">
+                    <i class="fas fa-history"></i> 历史记录
+                </button>
             </div>
         </div>
     </div>
@@ -104,6 +107,43 @@
                 代码练习场工具版权归 <strong>复旦大学计算与智能创新学院</strong> 所有
                 | 仅供教学和学习使用
             </small>
+        </div>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header d-flex align-items-center justify-content-between">
+                <h5 class="modal-title d-flex align-items-center gap-2 mb-0" id="historyModalLabel">
+                    <i class="fas fa-history"></i> 代码执行历史记录
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="clear-history-btn">
+                        <i class="fas fa-trash"></i> 清空历史
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="history-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-2 text-muted">正在加载历史记录...</p>
+                </div>
+                <div id="history-empty" class="text-center py-4" style="display: none;">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">暂无历史记录</p>
+                </div>
+                <div id="history-list" style="display: none;">
+                    <!-- 历史记录列表将在这里动态生成 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
         </div>
     </div>
 </div>
@@ -217,6 +257,19 @@
         document.getElementById('format-code').addEventListener('click', function () {
             formatCode();
         });
+
+        // History button
+        document.getElementById('history-btn').addEventListener('click', function () {
+            showHistoryModal();
+        });
+
+        // Clear history
+        const clearBtn = document.getElementById('clear-history-btn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                clearExecutionHistory();
+            });
+        }
 
         // Keyboard shortcut: Ctrl+Enter to run code (已在 CodeMirror 配置中处理)
 
@@ -415,6 +468,165 @@ print(f"平方数: {squares}")`
         });
 
         codeMirrorEditor.setValue(formattedLines.join('\n'));
+    }
+
+    // History modal functions
+    function showHistoryModal() {
+        const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+        modal.show();
+        loadHistory();
+    }
+
+    function loadHistory() {
+        const loadingEl = document.getElementById('history-loading');
+        const emptyEl = document.getElementById('history-empty');
+        const listEl = document.getElementById('history-list');
+
+        // 显示加载状态
+        loadingEl.style.display = 'block';
+        emptyEl.style.display = 'none';
+        listEl.style.display = 'none';
+
+        fetch('/api/executions/history')
+            .then(response => response.json())
+            .then(data => {
+                loadingEl.style.display = 'none';
+
+                if (!data.success || !data.records || data.records.length === 0) {
+                    emptyEl.style.display = 'block';
+                    return;
+                }
+
+                // 显示历史记录列表
+                listEl.innerHTML = '';
+                data.records.forEach(record => {
+                    const recordItem = createHistoryItem(record);
+                    listEl.appendChild(recordItem);
+                });
+                listEl.style.display = 'block';
+            })
+            .catch(error => {
+                loadingEl.style.display = 'none';
+                listEl.innerHTML = `<div class="alert alert-danger">加载失败: ${error.message}</div>`;
+                listEl.style.display = 'block';
+            });
+    }
+
+    function clearExecutionHistory() {
+        const btn = document.getElementById('clear-history-btn');
+        const loadingEl = document.getElementById('history-loading');
+        const listEl = document.getElementById('history-list');
+        const emptyEl = document.getElementById('history-empty');
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> 清空中...';
+        }
+
+        fetch('/api/executions/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(r => r.json())
+            .then(data => {
+                // 刷新列表为“空”
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (listEl) {
+                    listEl.innerHTML = '';
+                    listEl.style.display = 'none';
+                }
+                if (emptyEl) emptyEl.style.display = 'block';
+            })
+            .catch(err => {
+                // 显示错误提示
+                if (listEl) {
+                    listEl.innerHTML = `<div class="alert alert-danger">清空失败: ${escapeHtml(err.message || '未知错误')}</div>`;
+                    listEl.style.display = 'block';
+                }
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-trash"></i> 清空历史';
+                }
+            });
+    }
+
+    function createHistoryItem(record) {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'card mb-2 history-item';
+        itemDiv.style.cursor = 'pointer';
+        itemDiv.style.transition = 'all 0.2s';
+
+        // 鼠标悬停效果
+        itemDiv.addEventListener('mouseenter', function () {
+            this.style.backgroundColor = '#eaedf7';
+            this.style.borderColor = '#0dcaf0';
+            // 展开完整代码
+            const codeContainer = this.querySelector('.history-code');
+            if (codeContainer && !codeContainer.dataset.expanded) {
+                codeContainer.dataset.expanded = 'true';
+                codeContainer.innerHTML = `<pre class="bg-dark text-light p-2 rounded mb-0" style="font-size: 12px; max-height: 300px; overflow: auto; white-space: pre-wrap;">${escapeHtml(record.code)}</pre>`;
+            }
+        });
+        itemDiv.addEventListener('mouseleave', function () {
+            this.style.backgroundColor = '';
+            this.style.borderColor = '';
+            // 恢复为预览
+            const codeContainer = this.querySelector('.history-code');
+            if (codeContainer) {
+                const preview = codePreview;
+                const codeLines = preview.split('\n').length;
+                const codeHeight = Math.min(codeLines, 5);
+                codeContainer.innerHTML = `<pre class="bg-dark text-light p-2 rounded mb-0" style="font-size: 12px; max-height: ${codeHeight * 1.5}em; overflow: hidden; white-space: pre-wrap;">${escapeHtml(preview)}</pre>`;
+                codeContainer.dataset.expanded = '';
+            }
+        });
+
+        // 点击加载代码
+        itemDiv.addEventListener('click', function () {
+            loadCodeFromHistory(record.code);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('historyModal'));
+            modal.hide();
+        });
+
+        // 代码预览（只显示前100个字符）
+        const codePreview = record.code.length > 100
+            ? record.code.substring(0, 100) + '...'
+            : record.code;
+        const codeLines = codePreview.split('\n').length;
+        const codeHeight = Math.min(codeLines, 5);
+
+        itemDiv.innerHTML = `
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> ${record.executed_at}
+                    </small>
+                    <span class="badge bg-secondary" style="background-color: #6b859e !important;">ID: ${record.id}</span>
+                </div>
+                <div class="history-code">
+                    <pre class="bg-dark text-light p-2 rounded mb-0" style="font-size: 12px; max-height: ${codeHeight * 1.5}em; overflow: hidden; white-space: pre-wrap;">${escapeHtml(codePreview)}</pre>
+                </div>
+            </div>
+        `;
+
+        return itemDiv;
+    }
+
+    function loadCodeFromHistory(code) {
+        if (codeMirrorEditor) {
+            codeMirrorEditor.setValue(code);
+            codeMirrorEditor.focus();
+            // 滚动到编辑器顶部
+            codeMirrorEditor.setCursor(0, 0);
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 </script>
 {% endblock %}

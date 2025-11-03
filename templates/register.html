@@ -50,8 +50,8 @@
                         <label for="username" class="form-label">
                             <i class="fas fa-user me-2"></i>用户名
                         </label>
-                        <input type="text" class="form-control" id="username" name="username" 
-                               placeholder="请输入用户名" required autocomplete="username">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="请输入用户名"
+                            required autocomplete="username">
                         <small class="form-text text-muted">用户名可以与其他用户重复</small>
                     </div>
 
@@ -59,8 +59,8 @@
                         <label for="email" class="form-label">
                             <i class="fas fa-envelope me-2"></i>邮箱
                         </label>
-                        <input type="email" class="form-control" id="email" name="email" 
-                               placeholder="请输入邮箱地址" required autocomplete="email">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="请输入邮箱地址" required
+                            autocomplete="email">
                         <small class="form-text text-muted">用于账户验证和找回密码</small>
                     </div>
 
@@ -68,8 +68,8 @@
                         <label for="password" class="form-label">
                             <i class="fas fa-lock me-2"></i>密码
                         </label>
-                        <input type="password" class="form-control" id="password" name="password" 
-                               placeholder="请输入密码" required autocomplete="new-password">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码"
+                            required autocomplete="new-password">
                         <small class="form-text text-muted">建议使用至少6位字符的密码</small>
                     </div>
 
@@ -77,8 +77,8 @@
                         <label for="confirmPassword" class="form-label">
                             <i class="fas fa-lock me-2"></i>确认密码
                         </label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
-                               placeholder="请再次输入密码" required autocomplete="new-password">
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                            placeholder="请再次输入密码" required autocomplete="new-password">
                     </div>
 
                     <div class="d-grid gap-2 mb-3">
@@ -157,7 +157,7 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const registerForm = document.getElementById('registerForm');
         const errorMessage = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
@@ -165,7 +165,7 @@
         const successAccount = document.getElementById('successAccount');
         const submitBtn = document.getElementById('submitBtn');
 
-        registerForm.addEventListener('submit', async function(e) {
+        registerForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             // 隐藏之前的消息
@@ -226,7 +226,9 @@
 
                 if (response.ok) {
                     // 注册成功
-                    successAccount.textContent = data.user_id;
+                    // 格式化账号为8位数字（例如：2 -> 00000002）
+                    const formattedAccount = String(data.user_id).padStart(8, '0');
+                    successAccount.textContent = formattedAccount;
                     successMessage.classList.remove('d-none');
                     registerForm.reset();
 
@@ -255,7 +257,7 @@
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirmPassword');
 
-        confirmPasswordInput.addEventListener('input', function() {
+        confirmPasswordInput.addEventListener('input', function () {
             if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
                 confirmPasswordInput.setCustomValidity('密码不匹配');
             } else {

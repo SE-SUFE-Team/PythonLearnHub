@@ -12,7 +12,6 @@ class CodeExecution(db.Model):
     record_type = db.Column(db.Integer, default=0)  # 0=通用历史记录
     executed_at = db.Column(db.DateTime, default=datetime.now)
 
-    # 建立与User的关系
     user = db.relationship('User', backref=db.backref('code_executions', lazy=True))
 
     def to_dict(self):

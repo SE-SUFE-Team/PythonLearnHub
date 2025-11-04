@@ -2,12 +2,16 @@
   "problem_id": 2,
   "testcases": [
     {
-      "input": [2,3,4,6],
-      "expected_output": 8
+      "input": "[2.00000,10]",
+      "expected_output":1024.0
     },
     {
-      "input": [1,2,4,5,10],
-      "expected_output": 16
+      "input": "[2.10000,3]",
+      "expected_output": 9.261
+    },
+    {
+      "input": "[2.00000,-2]",
+      "expected_output": 0.25
     }
   ]
 }

@@ -2,11 +2,11 @@
   "problem_id": 3,
   "testcases": [
     {
-      "input": [4,3,2,6],
+      "input": "[[4,3,2,6]]",
       "expected_output": 26
     },
     {
-      "input": [100],
+      "input": "[[100]]",
       "expected_output": 0
     }
   ]

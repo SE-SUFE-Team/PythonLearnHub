@@ -1,10 +1,10 @@
 {
   "id": 2,
-  "title": "同积元组",
-  "description": "给你一个由 不同 正整数组成的数组 nums ，请你返回满足 a * b = c * d 的元组 (a, b, c, d) 的数量。其中 a、b、c 和 d 都是 nums 中的元素，且 a != b != c != d 。",
+  "title": "Pow(x, n)",
+  "description": "实现 pow(x, n) ，即计算 x 的整数 n 次幂函数（即，xn ）。",
   "example": {
-    "input": "nums = [2,3,4,6]",
-    "output": "8"
+    "input": "x = 2.1, n = 3",
+    "output": "9.261"
   },
-  "function_name": "tupleSameProduct"
+  "function_name": "myPow"
 }

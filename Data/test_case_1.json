@@ -2,11 +2,11 @@
   "problem_id": 1,
   "testcases": [
     {
-      "input": "babad",
+      "input": "'babad'",
       "expected_output": "bab"
     },
     {
-      "input": "cbbd",
+      "input": "'cbbd'",
       "expected_output": "bb"
     }
   ]

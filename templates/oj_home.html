@@ -164,6 +164,12 @@
         color: #ffffff !important;
     }
 
+    /* 默认状态专用背景 */
+    .badge-default {
+        background-color: #343a40 !important;
+        color: #ffffff !important;
+    }
+
     .submission-item {
         border-left: 4px solid transparent;
     }
@@ -636,7 +642,7 @@
             case 'TLE': return { badge: 'bg-warning text-dark', color: '#ffc107' };
             case 'RE': return { badge: 'bg-secondary', color: '#6c757d' };
             case 'CE': return { badge: 'bg-info text-dark', color: '#0dcaf0' };
-            default: return { badge: 'bg-dark', color: '#343a40' };
+            default: return { badge: 'badge-default', color: '#343a40' };
         }
     }
 

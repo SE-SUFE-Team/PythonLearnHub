@@ -1,4 +1,3 @@
-
 def longestPalindrome(s: str) -> str:
     n = len(s)
     ans_left = ans_right = 0
@@ -25,16 +24,12 @@ def longestPalindrome(s: str) -> str:
     return s[ans_left: ans_right]
 
 
-
-
 def myPow(x: float, n: int) -> float:
     if n < 0:
         return myPow(1 / x, -n)
     if n == 0:
         return 1.0
-    return myPow(x, n // 2) ** 2 * (x if n % 2 else 1.0)
-
-
+    return round(myPow(x, n // 2) ** 2 * (x if n % 2 else 1.0), 5)
 
 
 def maxRotateFunction(nums: list[int]) -> int:
@@ -48,8 +43,6 @@ def maxRotateFunction(nums: list[int]) -> int:
     return res
 
 
-
-
 def twoSum(nums: list[int], target: int) -> list[int]:
     n = len(nums)
     for i in range(n):
@@ -58,8 +51,6 @@ def twoSum(nums: list[int], target: int) -> list[int]:
                 return [i, j]
 
     return []
-
-
 
 
 def subsets(nums: list[int]) -> list[list[int]]:
@@ -82,4 +73,3 @@ def subsets(nums: list[int]) -> list[list[int]]:
 
     dfs(0)
     return ans
-

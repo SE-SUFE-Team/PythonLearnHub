@@ -196,6 +196,26 @@
         min-height: 2.25rem;
         /* 行高约 36px */
     }
+
+    /* 题目详情中的代码块样式 */
+    #problem-detail pre {
+        border-left: 4px solid #6c757d;
+        padding: 0.5rem;
+        padding-left: 0.75rem;
+        margin: 0.5rem 0;
+        background-color: transparent;
+    }
+
+    #problem-detail pre code {
+        background-color: transparent !important;
+    }
+
+    #problem-detail .oj-code-block {
+        border-left: 3px solid #d8dce0;
+        padding: 0.5rem;
+        padding-left: 0.75rem;
+        background-color: transparent;
+    }
 </style>
 {% endblock %}
 
@@ -372,12 +392,44 @@
             .then(data => {
                 if (!data.success) throw new Error(data.error || '获取题目详情失败');
                 const p = data.problem;
+
+                // 构建示例的markdown内容
+                let exampleHtml = '';
+                if (p.example) {
+                    const input = escapeHtml(p.example.input || '');
+                    const output = escapeHtml(p.example.output || '');
+                    // 使用HTML直接构建，确保加粗显示
+                    exampleHtml = `
+                        <h6 class="mt-3 mb-2"><strong>示例:</strong></h6>
+                        <pre class="oj-code-block"><code><strong>输入：</strong>${input}\n<strong>输出：</strong>${output}</code></pre>
+                    `;
+                }
+
+                // 构建函数名的markdown内容
+                let functionNameHtml = '';
+                if (p.function_name) {
+                    const functionName = escapeHtml(p.function_name);
+                    // 使用HTML直接构建
+                    functionNameHtml = `
+                        <h6 class="mt-3 mb-2"><strong>函数名:</strong></h6>
+                        <pre class="oj-code-block"><code>${functionName}</code></pre>
+                    `;
+                }
+
                 detail.innerHTML = `
                     <h5 class="mb-2">${escapeHtml(p.title || '')}</h5>
                     <div class="mb-2"><span class="badge bg-primary me-2">ID: ${escapeHtml(p.id)}</span></div>
                     <hr/>
                     <div style="white-space: pre-wrap;">${escapeHtml(p.description || '')}</div>
+                    <div class="mt-3"></div>
+                    ${exampleHtml}
+                    ${functionNameHtml}
                 `;
+
+                // 如果使用了markdown-it，需要触发代码高亮
+                if (window.Prism && (exampleHtml || functionNameHtml)) {
+                    Prism.highlightAllUnder(detail);
+                }
             })
             .catch(err => {
                 detail.innerHTML = `<div class="alert alert-danger">${escapeHtml(err.message || '加载失败')}</div>`;

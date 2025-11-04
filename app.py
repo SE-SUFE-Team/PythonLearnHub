@@ -470,6 +470,44 @@ def api_get_submissions():
         })
 
 
+@app.route('/api/oj/submissions/clear', methods=['POST'])
+@login_required
+def api_clear_submissions():
+    """清空指定题目的提交历史记录"""
+    try:
+        data = request.get_json()
+        problem_id = data.get('problem_id')
+
+        if not problem_id:
+            return jsonify({
+                'success': False,
+                'error': '缺少题目ID'
+            }), 400
+
+        user_id = session.get('user_id')
+
+        # 删除该用户指定题目的所有提交记录
+        deleted_count = Submission.query.filter_by(
+            user_id=user_id,
+            problem_id=problem_id
+        ).delete()
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'已清空 {deleted_count} 条提交记录',
+            'deleted_count': deleted_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'清空失败: {str(e)}'
+        }), 500
+
+
 @app.route('/oj/problem/<problem_id>')
 @login_required
 def oj_problem_detail(problem_id):

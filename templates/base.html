@@ -71,6 +71,9 @@
                             <li><a class="dropdown-item" href="{{ url_for('code_playground') }}">
                                     <i class="fas fa-play"></i> 代码练习场
                                 </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('oj_home') }}">
+                                    <i class="fas fa-trophy"></i> 做题训练
+                                </a></li>
                             <li><a class="dropdown-item" href="{{ url_for('regex_tool') }}">
                                     <i class="fas fa-search"></i> 正则表达式工具
                                 </a></li>
@@ -96,21 +99,23 @@
                 <!-- User Dropdown Menu -->
                 {% if is_logged_in and current_user %}
                 <div class="dropdown">
-                    <a class="btn btn-outline-light dropdown-toggle d-flex align-items-center" href="#" 
-                       id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="btn btn-outline-light dropdown-toggle d-flex align-items-center" href="#"
+                        id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user-circle me-2"></i>
                         <span>{{ current_user.username }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li class="px-3 py-2 border-bottom">
                             <div class="small text-muted">账号ID</div>
-                            <div class="fw-bold">{{ current_user.id }}</div>
+                            <div class="fw-bold">{{ current_user.id | format_account_id }}</div>
                         </li>
                         <li class="px-3 py-2 border-bottom">
                             <div class="small text-muted">用户名</div>
                             <div class="fw-bold">{{ current_user.username }}</div>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li>
                             <a class="dropdown-item" href="{{ url_for('index') }}">
                                 <i class="fas fa-home me-2"></i>我的主页
@@ -124,15 +129,22 @@
                     </ul>
                 </div>
                 {% else %}
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
                     <a href="{{ url_for('login_page') }}" class="btn btn-outline-light">
                         <i class="fas fa-sign-in-alt me-2"></i>登录
                     </a>
-                    <a href="{{ url_for('register_page') }}" class="btn btn-primary">
+                    <a href="{{ url_for('register_page') }}" class="btn btn-outline-light">
                         <i class="fas fa-user-plus me-2"></i>注册
                     </a>
                 </div>
                 {% endif %}
+
+                <!-- Notes Button in Navbar (最右边) -->
+                <button class="btn btn-outline-light d-flex align-items-center ms-2" id="openNotesBtn"
+                    aria-label="打开学习笔记" title="学习笔记" style="border: none;">
+                    <img src="{{ url_for('static', filename='svg/note.svg') }}" alt="笔记"
+                        style="width: 35px; height: 35px;">
+                </button>
             </div>
         </div>
     </nav>
@@ -273,20 +285,16 @@
         <img src="{{ url_for('static', filename='svg/AI.svg') }}" alt="AI助手" class="ai-icon">
         <div class="ai-pulse"></div>
     </div>
-<!-- 笔记相关 -->
-    <!-- Notes Floating Button -->
-    <div class="notes-btn" id="notesBtn" title="学习笔记">
-        <button class="btn btn-primary rounded-circle notes-fab" id="openNotesBtn" aria-label="打开学习笔记">
-            <i class="fas fa-sticky-note"></i>
-        </button>
-    </div>
 
     <!-- Notes Modal -->
     <div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="notesModalLabel"><i class="fas fa-sticky-note me-2"></i> 学习笔记</h5>
+                    <h5 class="modal-title" id="notesModalLabel">
+                        <img src="{{ url_for('static', filename='svg/note.svg') }}" alt="笔记"
+                            style="width: 20px; height: 20px; margin-right: 0.5rem; vertical-align: middle;"> 学习笔记
+                    </h5>
                     <!-- 在关闭按钮左侧显示用户名 -->
                     <div class="ms-3 me-2 text-muted small align-self-center" id="notesUsername">{{ username }}</div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
@@ -296,16 +304,19 @@
                         <div class="col-md-4 border-end">
                             <div class="d-flex mb-2">
                                 <input type="text" id="notesSearch" class="form-control me-2" placeholder="搜索笔记...">
-                                <button class="btn btn-outline-primary" id="newNoteBtn" title="新建笔记"><i class="fas fa-plus"></i></button>
+                                <button class="btn btn-outline-primary" id="newNoteBtn" title="新建笔记"><i
+                                        class="fas fa-plus"></i></button>
                             </div>
                             <div id="notesList" class="notes-list"></div>
                         </div>
                         <div class="col-md-8">
                             <div class="mb-2">
-                                <input type="text" id="noteTitle" class="form-control" placeholder="标题（可选，最多100字符）" maxlength="100">
+                                <input type="text" id="noteTitle" class="form-control" placeholder="标题（可选，最多100字符）"
+                                    maxlength="100">
                             </div>
                             <div class="mb-2">
-                                <textarea id="noteContent" class="form-control" rows="12" placeholder="在此填写学习笔记，支持多行文本" required></textarea>
+                                <textarea id="noteContent" class="form-control" rows="12" placeholder="在此填写学习笔记，支持多行文本"
+                                    required></textarea>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -313,12 +324,15 @@
                                     <button class="btn btn-outline-secondary me-2" id="notesVoiceBtn" title="语音输入">
                                         <i class="fas fa-microphone"></i>
                                     </button>
-                                    <button class="btn btn-success" id="saveNoteBtn"><i class="fas fa-save"></i> 保存</button>
-                                    <button class="btn btn-danger ms-2 d-none" id="deleteNoteBtn"><i class="fas fa-trash"></i> 删除</button>
+                                    <button class="btn btn-success" id="saveNoteBtn"><i class="fas fa-save"></i>
+                                        保存</button>
+                                    <button class="btn btn-danger ms-2 d-none" id="deleteNoteBtn"><i
+                                            class="fas fa-trash"></i> 删除</button>
                                 </div>
                                 <div class="d-flex flex-column align-items-end">
                                     <div class="text-muted small" id="noteMeta"></div>
-                                    <div class="small text-muted" id="notesVoiceStatus" style="min-width:140px; text-align:right;"></div>
+                                    <div class="small text-muted" id="notesVoiceStatus"
+                                        style="min-width:140px; text-align:right;"></div>
                                 </div>
                             </div>
                         </div>

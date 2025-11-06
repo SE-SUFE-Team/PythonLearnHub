@@ -78,7 +78,7 @@
         noteTitleInput.value = n.title || '';
         setNoteContentValue(n.content || '');
         noteMeta.textContent = `最后更新: ${new Date(n.updated_at || n.created_at).toLocaleString()}`;
-        
+
         deleteNoteBtn.classList.remove('d-none');
     }
 
@@ -103,7 +103,7 @@
         } finally { setLoading(false); }
     }
 
-    
+
 
     async function saveNote() {
         const content = getNoteContentValue().trim();
@@ -157,10 +157,26 @@
         }
     }
 
-    
+
 
     // bind events
-    if (openNotesBtn) openNotesBtn.addEventListener('click', async () => { clearEditor(); await refreshNotes(); notesModal.show(); });
+    if (openNotesBtn) openNotesBtn.addEventListener('click', async () => {
+        // 检查用户是否登录
+        const userLoggedIn = document.body.getAttribute('data-logged-in') === 'true' ||
+            (document.getElementById('userDropdown') !== null);
+        if (!userLoggedIn) {
+            alert('请先登录后再使用笔记功能');
+            // // 可以跳转到登录页面
+            // const loginUrl = window.location.origin + '/login';
+            // if (confirm('是否前往登录页面？')) {
+            //     window.location.href = loginUrl;
+            // }
+            return;
+        }
+        // 不自动清除编辑器，保持当前选中的笔记
+        await refreshNotes();
+        notesModal.show();
+    });
     function focusNoteContent() {
         try {
             if (noteEditor && noteEditor.codemirror) {
@@ -322,14 +338,26 @@
             // 初始化或恢复 EasyMDE 编辑器
             try {
                 if (typeof EasyMDE !== 'undefined' && !noteEditor && noteContentTextarea) {
+                    // 如果已经选中了笔记，就不显示placeholder
+                    const hasContent = currentNoteId !== null || (noteContentTextarea.value && noteContentTextarea.value.trim() !== '');
                     noteEditor = new EasyMDE({
                         element: noteContentTextarea,
                         spellChecker: false,
                         autosave: { enabled: false },
                         status: false,
-                        placeholder: '在此填写学习笔记，支持 Markdown 格式',
+                        placeholder: hasContent ? '' : '在此填写学习笔记，支持 Markdown 格式',
                         toolbar: ["bold", "italic", "heading", "|", "quote", "code", "unordered-list", "ordered-list", "link", "image", "|", "preview", "side-by-side", "fullscreen"]
                     });
+                } else if (noteEditor) {
+                    // 如果编辑器已存在，根据当前状态更新placeholder
+                    const currentContent = getNoteContentValue();
+                    if (currentNoteId !== null || (currentContent && currentContent.trim() !== '')) {
+                        // 如果已经选中笔记或有内容，清除placeholder
+                        noteEditor.options.placeholder = '';
+                    } else {
+                        // 如果没有选中笔记且内容为空，显示placeholder
+                        noteEditor.options.placeholder = '在此填写学习笔记，支持 Markdown 格式';
+                    }
                 }
             } catch (e) {
                 console.warn('初始化 Markdown 编辑器失败', e);

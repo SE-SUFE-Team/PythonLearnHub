@@ -1,0 +1,10 @@
+{
+  "id": 1,
+  "title": "最长回文子串",
+  "description": "给你一个字符串 s，找到 s 中最长的回文子串。如果字符串向前和向后读都相同，则它满足回文性。子字符串 是字符串中连续的非空字符序列。",
+  "example": {
+    "input": "\"babad\"",
+    "output": "\"bab\""
+  },
+  "function_name": "longestPalindrome"
+}

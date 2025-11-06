@@ -1,4 +1,8 @@
 myvenv/
 .DS_Store
+__pycache__/
+*.pyc
+instance/database.db
+*.db
 utils/__pycache__/
 instance/

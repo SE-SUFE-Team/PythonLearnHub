@@ -117,7 +117,8 @@ body {
 }
 
 .module-progress .progress-bar {
-    width: 0%; /* initial, will be set by JS using data-progress */
+    width: 0%;
+    /* initial, will be set by JS using data-progress */
     transition: width 0.6s ease;
     display: flex;
     align-items: center;
@@ -336,7 +337,7 @@ body {
 .btn-danger {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
-    color: white;
+    color: #2c3e50;
 }
 
 .btn-info {
@@ -412,6 +413,14 @@ body {
 
 .badge.bg-danger {
     background-color: var(--dark-color) !important;
+}
+
+.badge.bg-secondary {
+    background-color: #93aec1 !important;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
 }
 
 /* ========== 示例项目样式 ========== */
@@ -1414,7 +1423,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
 .notes-list {
@@ -1424,15 +1433,15 @@ body {
 
 .notes-list .note-item {
     padding: 0.5rem;
-    border-bottom: 1px solid rgba(0,0,0,0.04);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    cursor: pointer;
 }
 
 .notes-list .note-item:hover {
-    background: rgba(147,174,193,0.04);
+    background: rgba(147, 174, 193, 0.04);
 }
 
 .note-meta {
     font-size: 0.8rem;
     color: #6c757d;
 }
-

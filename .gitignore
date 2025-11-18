@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 instance/database.db
 *.db
+utils/__pycache__/
+instance/

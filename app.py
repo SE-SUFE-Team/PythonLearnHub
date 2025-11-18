@@ -3,20 +3,23 @@ Python学习平台 - 主应用
 整合所有Python学习模块的Web应用
 """
 import os
+import random
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_from_directory
+from werkzeug.utils import secure_filename
 from functools import wraps
 from utils.safe_executor import executor
 from utils.module_content import ALL_MODULES, MODULE_NAVIGATION
 import re
 import json
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db
 from models.user import User
+from models.user_profile import UserProfile
 from models.code_execution import CodeExecution
-from sqlalchemy import desc
+from sqlalchemy import desc, func, distinct
 from models.progress import Progress
 from models.notes import Note
 from sqlalchemy.exc import IntegrityError
@@ -29,35 +32,24 @@ app.config['SECRET_KEY'] = 'python_learning_platform_2024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# 头像上传配置
+app.config['UPLOAD_FOLDER'] = 'static/avatars'
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB 最大文件大小
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 # ======================== 数据库 ========================
 
 db.init_app(app)
 
+# 创建所有表
+with app.app_context():
+    db.create_all()
 # ======================== Jinja2 过滤器 ========================
 
 @app.template_filter('format_account_id')
 def format_account_id(user_id):
     """将用户ID格式化为8位数字字符串（例如：2 -> 00000002）"""
     return str(user_id).zfill(8)
-
-with app.app_context():
-    db.create_all()
-    # 插入测试用户
-    if not User.query.filter_by(username='testuser').first():
-        test_user = User(
-            id=1,
-            username='testuser',
-            email='test@example.com',
-            password_hash='123456'
-        )
-        db.session.add(test_user)
-        db.session.commit()
-        print("✅ 数据库表测试，testuser已插入")
-
-    # 查询用户验证
-    users = User.query.all()
-    for u in users:
-        print(u)
 
 # ======================== 登陆注册 ========================
 
@@ -80,12 +72,22 @@ def register():
     if User.query.filter_by(email=email).first():
         return jsonify({'error': '邮箱已存在'}), 400
 
+    # 生成随机的8位数字账号（10000000-99999999）
+    max_attempts = 100
+    user_id = None
+    for _ in range(max_attempts):
+        user_id = str(random.randint(10000000, 99999999))
+        if not User.query.filter_by(id=user_id).first():
+            break
+    else:
+        return jsonify({'error': '账号生成失败，请稍后重试'}), 500
+
     hashed_pw = generate_password_hash(password)
-    new_user = User(username=username, email=email, password_hash=hashed_pw)
+    new_user = User(username=username, email=email, password_hash=hashed_pw,id=user_id)
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({'message': '注册成功', 'user_id': new_user.id}), 201
+    return jsonify({'message': '注册成功', 'user_id':user_id}), 201
 
 # 登录页面
 @app.route('/login', methods=['GET'])
@@ -138,6 +140,212 @@ def login_required(f):
             return redirect(url_for('login_page'))
         return f(*args, **kwargs)
     return decorated_function
+
+# ======================== 个人主页 ========================
+
+@app.route('/profile')
+@login_required
+def profile():
+    """个人主页"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login_page'))
+    
+    user = User.query.get(user_id)
+    if not user:
+        return redirect(url_for('login_page'))
+    
+    # 查询学习统计数据
+    stats = {}
+    
+    # 1. 总学习时长（从 Progress 表汇总 study_time，单位：分钟，转换为小时）
+    total_study_minutes = db.session.query(db.func.sum(Progress.study_time)).filter_by(user_id=user_id).scalar() or 0.0
+    stats['total_study_minutes'] = round(total_study_minutes, 2)
+    
+    # 2. 完成模块数（progress_value >= 0.99 视为完成）
+    completed_modules = Progress.query.filter_by(user_id=user_id).filter(Progress.progress_value >= 0.99).count()
+    stats['completed_modules'] = completed_modules
+    total_modules = len(MODULE_NAVIGATION)  # 总模块数
+    
+    # 3. 笔记数
+    notes_count = Note.query.filter_by(user_id=user_id).count()
+    stats['notes_count'] = notes_count
+    
+    # 4. 已解决题目数（status='AC' 的题目，去重 problem_id）
+    solved_problems = db.session.query(distinct(Submission.problem_id)).filter_by(
+        user_id=user_id, 
+        status='AC'
+    ).count()
+    stats['solved_problems'] = solved_problems
+    
+    # 5. 最近活跃时间（从 Progress、Note、Submission 中取最新的）
+    latest_progress = db.session.query(func.max(Progress.last_updated)).filter_by(user_id=user_id).scalar()
+    latest_note = db.session.query(func.max(Note.updated_at)).filter_by(user_id=user_id).scalar()
+    latest_submission = db.session.query(func.max(Submission.submitted_at)).filter_by(user_id=user_id).scalar()
+    
+    latest_dates = [d for d in [latest_progress, latest_note, latest_submission] if d is not None]
+    if latest_dates:
+        latest_active = max(latest_dates)
+        # 格式化最近活跃时间
+        now = datetime.now()
+        diff = now - latest_active
+        if diff.days == 0:
+            stats['last_active'] = '今天'
+        elif diff.days == 1:
+            stats['last_active'] = '昨天'
+        elif diff.days < 7:
+            stats['last_active'] = f'{diff.days} 天前'
+        else:
+            stats['last_active'] = latest_active.strftime('%Y-%m-%d')
+    else:
+        stats['last_active'] = '暂无'
+    
+    # 6. 连续学习天数（基于 Progress.last_updated、Note.updated_at 和 Submission.submitted_at）
+    # 获取所有有活动的日期（在 Python 中处理日期，避免 SQLite 日期函数兼容性问题）
+    all_dates = set()
+    
+    # 从 Progress 获取日期
+    progresses = Progress.query.filter_by(user_id=user_id).all()
+    for p in progresses:
+        if p.last_updated:
+            all_dates.add(p.last_updated.date())
+    
+    # 从 Note 获取日期
+    notes = Note.query.filter_by(user_id=user_id).all()
+    for n in notes:
+        if n.updated_at:
+            all_dates.add(n.updated_at.date())
+    
+    # 从 Submission 获取日期
+    submissions = Submission.query.filter_by(user_id=user_id).all()
+    for s in submissions:
+        if s.submitted_at:
+            all_dates.add(s.submitted_at.date())
+    
+    if all_dates:
+        # 按日期排序
+        sorted_dates = sorted(all_dates, reverse=True)
+        today = datetime.now().date()
+        
+        # 计算连续天数
+        consecutive_days = 0
+        expected_date = today
+        
+        for date in sorted_dates:
+            if date == expected_date:
+                consecutive_days += 1
+                # 计算前一天
+                expected_date = expected_date - timedelta(days=1)
+            elif date < expected_date:
+                # 如果日期不连续，停止计算
+                break
+        
+        stats['consecutive_days'] = consecutive_days
+    else:
+        stats['consecutive_days'] = 0
+    
+    # 获取用户头像URL（如果存在）
+    avatar_url = None
+    user_profile = UserProfile.query.filter_by(user_id=user_id).first()
+    if user_profile and user_profile.avatar:
+        avatar_url = url_for('get_avatar', filename=user_profile.avatar)
+    
+    # 生成活跃度图表数据（基于 Progress 表的 last_updated）
+    # 获取所有进度记录，按日期汇总
+    all_progresses = Progress.query.filter_by(user_id=user_id).all()
+    activity_data = {}
+    
+    for progress in all_progresses:
+        if progress.last_updated:
+            date_key = progress.last_updated.date()
+            if date_key not in activity_data:
+                activity_data[date_key] = {
+                    'count': 0,
+                    'study_time': 0.0
+                }
+            activity_data[date_key]['count'] += 1
+            activity_data[date_key]['study_time'] += (progress.study_time or 0.0)
+    
+    # 生成过去一年的完整日期数据（365天）
+    today = datetime.now().date()
+    one_year_ago = today - timedelta(days=365)
+    
+    # 计算活跃度级别（仅基于有活动数据的日期）
+    if activity_data:
+        # 找到最早的活动日期
+        dates = sorted(activity_data.keys())
+        earliest_date = dates[0]
+        
+        # 只计算最早日期之后的数据用于计算最大值
+        valid_data = {k: v for k, v in activity_data.items() if k >= earliest_date}
+        if valid_data:
+            max_study_time = max(data['study_time'] for data in valid_data.values())
+            max_count = max(data['count'] for data in valid_data.values())
+        else:
+            max_study_time = 0
+            max_count = 0
+    else:
+        earliest_date = None
+        max_study_time = 0
+        max_count = 0
+    
+    # 生成完整的过去365天数据
+    activity_list = []
+    for i in range(365):
+        date = today - timedelta(days=364 - i)
+        date_str = date.isoformat()
+        
+        # 如果日期在最早活动日期之前，或者没有活动数据，设置为无活动
+        if not activity_data or date < earliest_date or date not in activity_data:
+            activity_list.append({
+                'date': date_str,
+                'level': 0,
+                'count': 0,
+                'study_time': 0.0
+            })
+        else:
+            # 计算活跃度级别
+            data = activity_data[date]
+            study_time = data['study_time']
+            count = data['count']
+            
+            # 根据学习时长和活动次数计算活跃度级别
+            if max_study_time > 0:
+                time_score = (study_time / max_study_time) * 0.7
+            else:
+                time_score = 0
+            
+            if max_count > 0:
+                count_score = (count / max_count) * 0.3
+            else:
+                count_score = 0
+            
+            total_score = time_score + count_score
+            
+            # 转换为 0-4 级别
+            if total_score >= 0.8:
+                level = 4
+            elif total_score >= 0.6:
+                level = 3
+            elif total_score >= 0.4:
+                level = 2
+            elif total_score >= 0.1:
+                level = 1
+            else:
+                level = 0
+            
+            activity_list.append({
+                'date': date_str,
+                'level': level,
+                'count': count,
+                'study_time': round(study_time, 2)
+            })
+    
+    return render_template('profile.html', 
+                         stats=stats,
+                         total_modules=total_modules,
+                         avatar_url=avatar_url,
+                         activity_data=activity_list)
 
 # ======================== 主页和导航 ========================
 
@@ -846,6 +1054,75 @@ def api_delete_note(note_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
+# ======================== 头像上传功能 ========================
+
+@app.route('/api/upload-avatar', methods=['POST'])
+@login_required
+def api_upload_avatar():
+    """上传用户头像"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'error': '未登录'}), 401
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'error': '用户不存在'}), 400
+    
+    # 检查文件
+    if 'avatar' not in request.files:
+        return jsonify({'success': False, 'error': '没有上传文件'}), 400
+    
+    file = request.files['avatar']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': '文件名为空'}), 400
+    
+    # 检查文件类型
+    if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in ALLOWED_EXTENSIONS:
+        return jsonify({'success': False, 'error': '不支持的文件类型'}), 400
+    
+    # 创建目录
+    upload_dir = app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # 生成文件名：用户ID_时间戳.扩展名
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    filename = f"{user_id}_{int(datetime.now().timestamp())}.{ext}"
+    filepath = os.path.join(upload_dir, filename)
+    
+    # 获取或创建用户配置
+    user_profile = UserProfile.query.filter_by(user_id=user_id).first()
+    if not user_profile:
+        user_profile = UserProfile(user_id=user_id)
+        db.session.add(user_profile)
+    
+    # 删除旧头像（如果存在）
+    if user_profile.avatar:
+        old_filepath = os.path.join(upload_dir, user_profile.avatar)
+        if os.path.exists(old_filepath):
+            try:
+                os.remove(old_filepath)
+            except:
+                pass
+    
+    # 保存新头像
+    file.save(filepath)
+    
+    # 更新数据库
+    user_profile.avatar = filename
+    user_profile.updated_at = datetime.now()
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'avatar_url': url_for('get_avatar', filename=filename)
+    })
+
+@app.route('/avatars/<filename>')
+def get_avatar(filename):
+    """提供头像文件"""
+    upload_dir = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+    return send_from_directory(upload_dir, secure_filename(filename))
 
 
 

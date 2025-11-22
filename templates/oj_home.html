@@ -158,6 +158,18 @@
         font-weight: 600;
     }
 
+    /* WA 状态专用红色背景 */
+    .badge-wa {
+        background-color: #dc3545 !important;
+        color: #ffffff !important;
+    }
+
+    /* 默认状态专用背景 */
+    .badge-default {
+        background-color: #343a40 !important;
+        color: #ffffff !important;
+    }
+
     .submission-item {
         border-left: 4px solid transparent;
     }
@@ -555,7 +567,17 @@
         const statusClass = mapStatusToClass(s.status);
         div.style.borderLeftColor = statusClass.color;
         const fullCode = s.code || '';
-        const err = s.error_message ? formatErrorMessage(s.error_message) : '';
+        // 优化错误信息判断：只有当 error_message 存在且格式化后为有效错误信息时才显示
+        let err = '';
+        // 检查 error_message 是否存在且不为 null/undefined/空字符串/"null"字符串
+        if (s.error_message && s.error_message !== null && s.error_message !== undefined &&
+            String(s.error_message).trim() !== '' && String(s.error_message).toLowerCase() !== 'null') {
+            const formattedErr = formatErrorMessage(s.error_message);
+            // 再次检查格式化后的结果是否为有效错误信息
+            if (formattedErr && formattedErr.trim() && formattedErr.toLowerCase() !== 'null') {
+                err = formattedErr;
+            }
+        }
         div.innerHTML = `
             <div class="card-body p-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -574,17 +596,41 @@
     }
 
     function formatErrorMessage(msg) {
+        // 如果消息本身就是 null 或无效值，返回空字符串
+        if (!msg || msg === null || msg === undefined || String(msg).trim() === '' ||
+            String(msg).toLowerCase() === 'null') {
+            return '';
+        }
         try {
             const obj = JSON.parse(msg);
             if (obj && typeof obj === 'object') {
-                if (obj.error) return String(obj.error);
-                if (obj.message) return String(obj.message);
-                if (obj.detail) return String(obj.detail);
-                if (obj.type) return String(obj.type);
+                // 检查解析后的对象中的错误字段
+                if (obj.error && obj.error !== null && String(obj.error).toLowerCase() !== 'null') {
+                    return String(obj.error);
+                }
+                if (obj.message && obj.message !== null && String(obj.message).toLowerCase() !== 'null') {
+                    return String(obj.message);
+                }
+                if (obj.detail && obj.detail !== null && String(obj.detail).toLowerCase() !== 'null') {
+                    return String(obj.detail);
+                }
+                if (obj.type && obj.type !== null && String(obj.type).toLowerCase() !== 'null') {
+                    return String(obj.type);
+                }
             }
-            return String(msg);
+            // 如果解析后没有有效字段，检查原始消息
+            const msgStr = String(msg);
+            if (msgStr.toLowerCase() === 'null' || msgStr.trim() === '') {
+                return '';
+            }
+            return msgStr;
         } catch (_) {
-            return String(msg);
+            // JSON 解析失败，直接返回原始消息（如果有效）
+            const msgStr = String(msg);
+            if (msgStr.toLowerCase() === 'null' || msgStr.trim() === '') {
+                return '';
+            }
+            return msgStr;
         }
     }
 
@@ -592,11 +638,11 @@
         const k = (status || '').toUpperCase();
         switch (k) {
             case 'AC': return { badge: 'bg-success', color: '#28a745' };
-            case 'WA': return { badge: 'bg-danger', color: '#dc3545' };
+            case 'WA': return { badge: 'badge-wa', color: '#dc3545' };
             case 'TLE': return { badge: 'bg-warning text-dark', color: '#ffc107' };
             case 'RE': return { badge: 'bg-secondary', color: '#6c757d' };
             case 'CE': return { badge: 'bg-info text-dark', color: '#0dcaf0' };
-            default: return { badge: 'bg-dark', color: '#343a40' };
+            default: return { badge: 'badge-default', color: '#343a40' };
         }
     }
 

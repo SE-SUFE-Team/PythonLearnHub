@@ -23,10 +23,10 @@ from sqlalchemy.exc import IntegrityError
 from utils.judge import judge_engine
 from models.problem import Problem, Submission
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'python_learning_platform_2024'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'python_learning_platform_2024')
 
 # SQLite 数据库配置
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ======================== 数据库 ========================
@@ -983,4 +983,4 @@ for module in MODULE_NAVIGATION:
     print(f"   {module['icon']} {module['title']} - {module['difficulty']}")
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5555)
+    app.run(debug=True, host='0.0.0.0', port=5000)

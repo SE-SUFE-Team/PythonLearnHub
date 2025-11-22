@@ -1,0 +1,15 @@
+# 忽略 __pycache__ 目录
+__pycache__/
+
+# 忽略 .idea 目录
+.idea/
+
+# 忽略 .git 目录
+.git/
+
+# 忽略 .gitignore 文件
+.gitignore
+
+# 忽略 README.md 文件
+README.md
+

@@ -976,7 +976,7 @@ def inject_navigation():
 
 # 启动信息（只执行一次）
 print("🐍 Python学习平台启动中...")
-print("📚 访问 http://localhost:5555 开始学习")
+print("📚 访问 http://localhost:5000 开始学习")
 print("🔒 安全代码执行环境已启用")
 print("📖 包含以下学习模块:")
 for module in MODULE_NAVIGATION:

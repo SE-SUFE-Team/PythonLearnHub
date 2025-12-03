@@ -1,0 +1,831 @@
+{% extends "base.html" %}
+
+{% block title %}个人主页 - Python学习平台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-avatar-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 4px solid white;
+        object-fit: cover;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        background-color: #f8f9fa;
+    }
+
+    .avatar-upload-overlay {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 45px;
+        height: 45px;
+        background-color: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 3px solid white;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .avatar-upload-overlay:hover {
+        background-color: var(--secondary-color);
+        transform: scale(1.1);
+    }
+
+    .avatar-upload-overlay i {
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    .profile-info {
+        color: white;
+    }
+
+    .profile-info h2 {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .profile-info .username {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .profile-info .account-id {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-info .email {
+        font-size: 1rem;
+        opacity: 0.95;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .profile-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .stat-item {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    .profile-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .profile-content {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .info-card h4 {
+        margin-bottom: 1rem;
+        color: var(--dark-color);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .info-value {
+        color: var(--dark-color);
+        font-weight: 600;
+    }
+
+    /* 活跃度图表样式 */
+    .activity-section {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 2rem;
+    }
+
+    .activity-section h4 {
+        margin-bottom: 1rem;
+        color: var(--dark-color);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .activity-legend {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+    }
+
+    .activity-graph {
+        display: flex;
+        gap: 3px;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .activity-month {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .activity-week {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .activity-day {
+        width: 11px;
+        height: 11px;
+        border-radius: 2px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .activity-day:hover {
+        border-color: #000;
+        transform: scale(1.2);
+    }
+
+    .activity-day[data-level="0"] {
+        background-color: #ebedf0;
+    }
+
+    .activity-day[data-level="1"] {
+        background-color: #c6e48b;
+    }
+
+    .activity-day[data-level="2"] {
+        background-color: #7bc96f;
+    }
+
+    .activity-day[data-level="3"] {
+        background-color: #239a3b;
+    }
+
+    .activity-day[data-level="4"] {
+        background-color: #196127;
+    }
+
+    .activity-months {
+        display: flex;
+        gap: 3px;
+        margin-left: 25px;
+        margin-bottom: 0.5rem;
+    }
+
+    .activity-month-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        min-width: 60px;
+    }
+
+    .activity-weekdays {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-right: 0.5rem;
+    }
+
+    .activity-weekday {
+        font-size: 0.75rem;
+        color: #6c757d;
+        height: 11px;
+        line-height: 11px;
+    }
+
+    .activity-tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        pointer-events: none;
+        z-index: 1000;
+        display: none;
+        white-space: nowrap;
+    }
+
+    .activity-tooltip.show {
+        display: block;
+    }
+
+    /* 头像上传模态框 */
+    .avatar-upload-modal .modal-header {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .avatar-preview {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        margin: 1rem auto;
+        object-fit: cover;
+        border: 4px solid var(--primary-color);
+        display: block;
+    }
+
+    .avatar-upload-area {
+        border: 2px dashed var(--primary-color);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(147, 174, 193, 0.05);
+    }
+
+    .avatar-upload-area:hover {
+        background: rgba(147, 174, 193, 0.1);
+        border-color: var(--secondary-color);
+    }
+
+    .avatar-upload-area.dragover {
+        background: rgba(147, 174, 193, 0.2);
+        border-color: var(--secondary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4">
+        <div class="profile-avatar-container">
+            <img src="{% if avatar_url %}{{ avatar_url }}{% else %}https://via.placeholder.com/150?text=User{% endif %}" alt="用户头像" class="profile-avatar" id="profileAvatar">
+            <div class="avatar-upload-overlay" data-bs-toggle="modal" data-bs-target="#avatarUploadModal">
+                <i class="fas fa-camera"></i>
+            </div>
+        </div>
+        <div class="profile-info flex-grow-1 text-center text-md-start">
+            <h2 class="username" id="profileUsername">{{ current_user.username }}</h2>
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="statSolved">{{ stats.solved_problems }}</span>
+                    <span class="stat-label">已解决题目</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statNotes">{{ stats.notes_count }}</span>
+                    <span class="stat-label">学习笔记</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statDays">{{ stats.consecutive_days }}</span>
+                    <span class="stat-label">连续学习天数</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="profile-content">
+    <div class="info-card">
+        <h4><i class="fas fa-user"></i> 个人信息</h4>
+        <div class="info-item">
+            <span class="info-label">用户名</span>
+            <span class="info-value" id="infoUsername">{{ current_user.username }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">账号ID</span>
+            <span class="info-value" id="infoAccountId">{{ current_user.id }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">邮箱</span>
+            <span class="info-value" id="infoEmail">{{ current_user.email }}</span>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <h4><i class="fas fa-chart-line"></i> 学习统计</h4>
+        <div class="info-item">
+            <span class="info-label">总学习时长</span>
+            <span class="info-value" id="statTotalTime">{{ stats.total_study_minutes }} 分钟</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">完成模块数</span>
+            <span class="info-value" id="statModules">{{ stats.completed_modules }} / {{ total_modules }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">笔记数</span>
+            <span class="info-value" id="statExecutions">{{ stats.notes_count }} 条</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">最近活跃</span>
+            <span class="info-value" id="statLastActive">{{ stats.last_active }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- 活跃度图表 -->
+<div class="activity-section">
+    <h4><i class="fas fa-calendar-alt"></i> 近期活跃度</h4>
+    <div class="activity-legend">
+        <span class="legend-item">
+            <span class="legend-color" style="background-color: #ebedf0;"></span>
+            <span>无活动</span>
+        </span>
+        <span class="legend-item">
+            <span class="legend-color" style="background-color: #c6e48b;"></span>
+            <span>较少</span>
+        </span>
+        <span class="legend-item">
+            <span class="legend-color" style="background-color: #7bc96f;"></span>
+            <span>中等</span>
+        </span>
+        <span class="legend-item">
+            <span class="legend-color" style="background-color: #239a3b;"></span>
+            <span>较多</span>
+        </span>
+        <span class="legend-item">
+            <span class="legend-color" style="background-color: #196127;"></span>
+            <span>很多</span>
+        </span>
+    </div>
+    <div class="d-flex">
+        <div class="activity-weekdays">
+            <div class="activity-weekday"></div>
+            <div class="activity-weekday"></div>
+            <div class="activity-weekday">一</div>
+            <div class="activity-weekday">二</div>
+            <div class="activity-weekday">三</div>
+            <div class="activity-weekday">四</div>
+            <div class="activity-weekday">五</div>
+            <div class="activity-weekday">六</div>
+            <div class="activity-weekday">日</div>
+        </div>
+        <div class="flex-grow-1">
+            <div class="activity-months" id="activityMonths"></div>
+            <div class="activity-graph" id="activityGraph"></div>
+        </div>
+    </div>
+    <div class="activity-tooltip" id="activityTooltip"></div>
+</div>
+
+<!-- 头像上传模态框 -->
+<div class="modal fade avatar-upload-modal" id="avatarUploadModal" tabindex="-1" aria-labelledby="avatarUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="avatarUploadModalLabel">
+                    <i class="fas fa-camera me-2"></i>上传头像
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <img src="https://via.placeholder.com/200?text=Preview" alt="头像预览" class="avatar-preview" id="avatarPreview">
+                </div>
+                <div class="avatar-upload-area" id="avatarUploadArea">
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: var(--primary-color);"></i>
+                    <p class="mb-2">点击或拖拽图片到此处上传</p>
+                    <p class="text-muted small">支持 JPG、PNG 格式，最大 2MB</p>
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
+                </div>
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveAvatarBtn" disabled>保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 活跃度数据 -->
+<script type="application/json" id="activity-data">
+{{ activity_data | tojson }}
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 使用后端传递的真实数据
+        function generateActivityData() {
+            // 从后端获取的活跃度数据
+            let backendData = [];
+            try {
+                const dataElement = document.getElementById('activity-data');
+                if (dataElement && dataElement.textContent) {
+                    backendData = JSON.parse(dataElement.textContent);
+                }
+            } catch (e) {
+                console.warn('解析活跃度数据失败:', e);
+                backendData = [];
+            }
+            
+            const data = [];
+            
+            if (backendData && backendData.length > 0) {
+                backendData.forEach(item => {
+                    data.push({
+                        date: new Date(item.date),
+                        level: item.level || 0,
+                        count: item.count || 0,
+                        study_time: item.study_time || 0,
+                        notes_count: item.notes_count || 0,
+                        completed_modules: item.completed_modules || 0,
+                        solved_problems: item.solved_problems || 0
+                    });
+                });
+            }
+            
+            return data;
+        }
+
+        // 渲染活跃度图表
+        function renderActivityGraph() {
+            const data = generateActivityData();
+            const graphContainer = document.getElementById('activityGraph');
+            const monthsContainer = document.getElementById('activityMonths');
+            graphContainer.innerHTML = '';
+            monthsContainer.innerHTML = '';
+
+            // 如果没有数据，直接返回
+            if (!data || data.length === 0) {
+                return;
+            }
+
+            // 按周组织数据
+            const weeks = [];
+            let currentWeek = [];
+            let currentDate = new Date(data[0].date);
+            
+            data.forEach((item, index) => {
+                const date = new Date(item.date);
+                const dayOfWeek = date.getDay(); // 0 = 周日, 1 = 周一, ...
+                
+                // 如果是周日或第一周，开始新的一周
+                if (dayOfWeek === 0 || currentWeek.length === 0) {
+                    if (currentWeek.length > 0) {
+                        // 如果当前周不足7天，用空数据填充
+                        while (currentWeek.length < 7) {
+                            currentWeek.push({ level: 0, date: null, count: 0 });
+                        }
+                        weeks.push(currentWeek);
+                    }
+                    currentWeek = [];
+                }
+                
+                currentWeek.push({
+                    level: item.level,
+                    date: item.date,
+                    count: item.count,
+                    study_time: item.study_time,
+                    notes_count: item.notes_count,
+                    completed_modules: item.completed_modules,
+                    solved_problems: item.solved_problems
+                });
+            });
+            
+            // 添加最后一周
+            if (currentWeek.length > 0) {
+                while (currentWeek.length < 7) {
+                    currentWeek.push({ level: 0, date: null, count: 0 });
+                }
+                weeks.push(currentWeek);
+            }
+
+            // 渲染月份标签
+            const monthLabels = [];
+            let lastMonth = -1;
+            weeks.forEach((week, weekIndex) => {
+                const firstDay = week.find(day => day.date !== null);
+                if (firstDay) {
+                    const date = new Date(firstDay.date);
+                    const month = date.getMonth();
+                    if (month !== lastMonth) {
+                        monthLabels.push({
+                            month: month,
+                            weekIndex: weekIndex,
+                            label: date.toLocaleDateString('zh-CN', { month: 'short' })
+                        });
+                        lastMonth = month;
+                    }
+                }
+            });
+
+            monthLabels.forEach(item => {
+                const monthLabel = document.createElement('div');
+                monthLabel.className = 'activity-month-label';
+                monthLabel.textContent = item.label;
+                monthsContainer.appendChild(monthLabel);
+            });
+
+            // 渲染周数据
+            weeks.forEach((week, weekIndex) => {
+                const weekContainer = document.createElement('div');
+                weekContainer.className = 'activity-week';
+                
+                week.forEach((day, dayIndex) => {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'activity-day';
+                    dayElement.setAttribute('data-level', day.level);
+                    
+                    if (day.date) {
+                        const dateObj = new Date(day.date);
+                        const dateStr = dateObj.toLocaleDateString('zh-CN');
+                        const studyTime = day.study_time || 0;
+                        const notesCount = day.notes_count || 0;
+                        const modulesCount = day.completed_modules || 0;
+                        const problemsCount = day.solved_problems || 0;
+                        
+                        // 构建详细的活动信息文本
+                        const activityParts = [];
+                        if (studyTime > 0) {
+                            activityParts.push(`学习 ${studyTime} 分钟`);
+                        }
+                        if (notesCount > 0) {
+                            activityParts.push(`${notesCount} 条笔记`);
+                        }
+                        if (modulesCount > 0) {
+                            activityParts.push(`完成 ${modulesCount} 个模块`);
+                        }
+                        if (problemsCount > 0) {
+                            activityParts.push(`解决 ${problemsCount} 道题目`);
+                        }
+                        
+                        const activityText = activityParts.length > 0
+                            ? `${dateStr}: ${activityParts.join('，')}`
+                            : `${dateStr}: 无活动`;
+                        
+                        dayElement.setAttribute('title', activityText);
+                        dayElement.setAttribute('data-date', dateStr);
+                        dayElement.setAttribute('data-count', day.count || 0);
+                        dayElement.setAttribute('data-study-time', studyTime);
+                        dayElement.setAttribute('data-notes-count', notesCount);
+                        dayElement.setAttribute('data-modules-count', modulesCount);
+                        dayElement.setAttribute('data-problems-count', problemsCount);
+                        
+                        // 添加悬停提示
+                        dayElement.addEventListener('mouseenter', function(e) {
+                            const tooltip = document.getElementById('activityTooltip');
+                            const date = this.getAttribute('data-date');
+                            const studyTime = this.getAttribute('data-study-time');
+                            const notesCount = this.getAttribute('data-notes-count');
+                            const modulesCount = this.getAttribute('data-modules-count');
+                            const problemsCount = this.getAttribute('data-problems-count');
+                            
+                            const tooltipParts = [];
+                            if (studyTime > 0) {
+                                tooltipParts.push(`学习 ${studyTime} 分钟`);
+                            }
+                            if (notesCount > 0) {
+                                tooltipParts.push(`${notesCount} 条笔记`);
+                            }
+                            if (modulesCount > 0) {
+                                tooltipParts.push(`完成 ${modulesCount} 个模块`);
+                            }
+                            if (problemsCount > 0) {
+                                tooltipParts.push(`解决 ${problemsCount} 道题目`);
+                            }
+                            
+                            if (tooltipParts.length > 0) {
+                                tooltip.textContent = `${date}: ${tooltipParts.join('，')}`;
+                            } else {
+                                tooltip.textContent = `${date}: 无活动`;
+                            }
+                            tooltip.classList.add('show');
+                            
+                            const rect = this.getBoundingClientRect();
+                            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+                            tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+                        });
+                        
+                        dayElement.addEventListener('mouseleave', function() {
+                            document.getElementById('activityTooltip').classList.remove('show');
+                        });
+                    }
+                    
+                    weekContainer.appendChild(dayElement);
+                });
+                
+                graphContainer.appendChild(weekContainer);
+            });
+        }
+
+        // 头像上传功能
+        const avatarUploadArea = document.getElementById('avatarUploadArea');
+        const avatarFileInput = document.getElementById('avatarFileInput');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+        const profileAvatar = document.getElementById('profileAvatar');
+        let selectedFile = null;
+
+        // 点击上传区域
+        avatarUploadArea.addEventListener('click', function() {
+            avatarFileInput.click();
+        });
+
+        // 拖拽上传
+        avatarUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        avatarUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        avatarUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // 文件选择
+        avatarFileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                handleFileSelect(this.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件！');
+                return;
+            }
+
+            // 验证文件大小（2MB）
+            if (file.size > 2 * 1024 * 1024) {
+                alert('图片大小不能超过 2MB！');
+                return;
+            }
+
+            selectedFile = file;
+
+            // 预览图片
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarPreview.src = e.target.result;
+                saveAvatarBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 保存头像
+        saveAvatarBtn.addEventListener('click', function() {
+            if (!selectedFile) {
+                return;
+            }
+
+            // 显示上传中状态
+            const originalText = saveAvatarBtn.innerHTML;
+            saveAvatarBtn.disabled = true;
+            saveAvatarBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>上传中...';
+
+            // 使用 FormData 发送到后端
+            const formData = new FormData();
+            formData.append('avatar', selectedFile);
+            
+            fetch('/api/upload-avatar', { 
+                method: 'POST', 
+                body: formData 
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新头像显示（添加时间戳避免缓存）
+                    profileAvatar.src = data.avatar_url + '?t=' + Date.now();
+                    bootstrap.Modal.getInstance(document.getElementById('avatarUploadModal')).hide();
+                    
+                    // 显示成功消息
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        <strong>成功！</strong> ${data.message || '头像上传成功'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.main-content .container').insertBefore(
+                        alertDiv, 
+                        document.querySelector('.profile-header')
+                    );
+                    
+                    // 3秒后自动关闭提示
+                    setTimeout(() => {
+                        alertDiv.remove();
+                    }, 3000);
+                } else {
+                    alert('上传失败: ' + (data.error || '未知错误'));
+                    saveAvatarBtn.disabled = false;
+                    saveAvatarBtn.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('上传错误:', error);
+                alert('上传失败，请稍后重试');
+                saveAvatarBtn.disabled = false;
+                saveAvatarBtn.innerHTML = originalText;
+            })
+            .finally(() => {
+                // 重置状态
+                if (!saveAvatarBtn.disabled) {
+                    selectedFile = null;
+                    avatarFileInput.value = '';
+                }
+            });
+        });
+
+        // 模态框关闭时重置
+        document.getElementById('avatarUploadModal').addEventListener('hidden.bs.modal', function() {
+            avatarPreview.src = 'https://via.placeholder.com/200?text=Preview';
+            saveAvatarBtn.disabled = true;
+            selectedFile = null;
+            avatarFileInput.value = '';
+        });
+
+        // 初始化活跃度图表
+        renderActivityGraph();
+    });
+</script>
+{% endblock %}
+

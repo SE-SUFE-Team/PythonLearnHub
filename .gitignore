@@ -2,5 +2,4 @@ myvenv/
 .DS_Store
 __pycache__/
 *.pyc
-instance/database.db
-*.db
+generate_test_data.py

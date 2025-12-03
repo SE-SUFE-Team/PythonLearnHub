@@ -506,7 +506,10 @@
                         date: new Date(item.date),
                         level: item.level || 0,
                         count: item.count || 0,
-                        study_time: item.study_time || 0
+                        study_time: item.study_time || 0,
+                        notes_count: item.notes_count || 0,
+                        completed_modules: item.completed_modules || 0,
+                        solved_problems: item.solved_problems || 0
                     });
                 });
             }
@@ -551,7 +554,11 @@
                 currentWeek.push({
                     level: item.level,
                     date: item.date,
-                    count: item.count
+                    count: item.count,
+                    study_time: item.study_time,
+                    notes_count: item.notes_count,
+                    completed_modules: item.completed_modules,
+                    solved_problems: item.solved_problems
                 });
             });
             
@@ -603,22 +610,62 @@
                         const dateObj = new Date(day.date);
                         const dateStr = dateObj.toLocaleDateString('zh-CN');
                         const studyTime = day.study_time || 0;
-                        const activityText = day.count > 0 
-                            ? `${dateStr}: ${day.count} 次活动，学习 ${studyTime} 分钟`
+                        const notesCount = day.notes_count || 0;
+                        const modulesCount = day.completed_modules || 0;
+                        const problemsCount = day.solved_problems || 0;
+                        
+                        // 构建详细的活动信息文本
+                        const activityParts = [];
+                        if (studyTime > 0) {
+                            activityParts.push(`学习 ${studyTime} 分钟`);
+                        }
+                        if (notesCount > 0) {
+                            activityParts.push(`${notesCount} 条笔记`);
+                        }
+                        if (modulesCount > 0) {
+                            activityParts.push(`完成 ${modulesCount} 个模块`);
+                        }
+                        if (problemsCount > 0) {
+                            activityParts.push(`解决 ${problemsCount} 道题目`);
+                        }
+                        
+                        const activityText = activityParts.length > 0
+                            ? `${dateStr}: ${activityParts.join('，')}`
                             : `${dateStr}: 无活动`;
+                        
                         dayElement.setAttribute('title', activityText);
                         dayElement.setAttribute('data-date', dateStr);
-                        dayElement.setAttribute('data-count', day.count);
+                        dayElement.setAttribute('data-count', day.count || 0);
                         dayElement.setAttribute('data-study-time', studyTime);
+                        dayElement.setAttribute('data-notes-count', notesCount);
+                        dayElement.setAttribute('data-modules-count', modulesCount);
+                        dayElement.setAttribute('data-problems-count', problemsCount);
                         
                         // 添加悬停提示
                         dayElement.addEventListener('mouseenter', function(e) {
                             const tooltip = document.getElementById('activityTooltip');
                             const date = this.getAttribute('data-date');
-                            const count = this.getAttribute('data-count');
                             const studyTime = this.getAttribute('data-study-time');
-                            if (count > 0) {
-                                tooltip.textContent = `${date}: ${count} 次活动，学习 ${studyTime} 分钟`;
+                            const notesCount = this.getAttribute('data-notes-count');
+                            const modulesCount = this.getAttribute('data-modules-count');
+                            const problemsCount = this.getAttribute('data-problems-count');
+                            
+                            const tooltipParts = [];
+                            if (studyTime > 0) {
+                                tooltipParts.push(`学习 ${studyTime} 分钟`);
+                            }
+                            if (notesCount > 0) {
+                                tooltipParts.push(`${notesCount} 条笔记`);
+                            }
+                            if (modulesCount > 0) {
+                                tooltipParts.push(`完成 ${modulesCount} 个模块`);
+                            }
+                            if (problemsCount > 0) {
+                                tooltipParts.push(`解决 ${problemsCount} 道题目`);
+                            }
+                            
+                            if (tooltipParts.length > 0) {
+                                tooltip.textContent = `${date}: ${tooltipParts.join('，')}`;
                             } else {
                                 tooltip.textContent = `${date}: 无活动`;
                             }

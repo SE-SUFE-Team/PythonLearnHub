@@ -5,4 +5,4 @@ __pycache__/
 instance/database.db
 *.db
 utils/__pycache__/
-instance/
+generate_test_data.py

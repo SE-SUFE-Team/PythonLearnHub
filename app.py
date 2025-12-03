@@ -48,7 +48,6 @@ with app.app_context():
 
 @app.template_filter('format_account_id')
 def format_account_id(user_id):
-    """将用户ID格式化为8位数字字符串（例如：2 -> 00000002）"""
     return str(user_id).zfill(8)
 
 # ======================== 登陆注册 ========================
@@ -158,7 +157,7 @@ def profile():
     # 查询学习统计数据
     stats = {}
     
-    # 1. 总学习时长（从 Progress 表汇总 study_time，单位：分钟，转换为小时）
+    # 1. 总学习时长（从 Progress 表汇总 study_time，单位：分钟）
     total_study_minutes = db.session.query(db.func.sum(Progress.study_time)).filter_by(user_id=user_id).scalar() or 0.0
     stats['total_study_minutes'] = round(total_study_minutes, 2)
     
@@ -250,21 +249,65 @@ def profile():
     if user_profile and user_profile.avatar:
         avatar_url = url_for('get_avatar', filename=user_profile.avatar)
     
-    # 生成活跃度图表数据（基于 Progress 表的 last_updated）
-    # 获取所有进度记录，按日期汇总
-    all_progresses = Progress.query.filter_by(user_id=user_id).all()
+    # 生成活跃度图表数据（基于多个数据源）
+    # 按日期汇总：学习时长、笔记数、完成模块数、解决题目数
     activity_data = {}
     
+    # 1. 从 Progress 表收集学习时长
+    all_progresses = Progress.query.filter_by(user_id=user_id).all()
     for progress in all_progresses:
         if progress.last_updated:
             date_key = progress.last_updated.date()
             if date_key not in activity_data:
                 activity_data[date_key] = {
-                    'count': 0,
-                    'study_time': 0.0
+                    'study_time': 0.0,
+                    'notes_count': 0,
+                    'completed_modules': 0,
+                    'solved_problems': 0
                 }
-            activity_data[date_key]['count'] += 1
             activity_data[date_key]['study_time'] += (progress.study_time or 0.0)
+            # 如果模块完成（progress_value >= 0.99），计入完成模块数
+            if progress.progress_value and progress.progress_value >= 0.99:
+                activity_data[date_key]['completed_modules'] += 1
+    
+    # 2. 从 Note 表收集笔记数（按创建或更新日期）
+    all_notes = Note.query.filter_by(user_id=user_id).all()
+    for note in all_notes:
+        # 使用 updated_at，如果没有则使用 created_at
+        note_date = (note.updated_at or note.created_at)
+        if note_date:
+            date_key = note_date.date()
+            if date_key not in activity_data:
+                activity_data[date_key] = {
+                    'study_time': 0.0,
+                    'notes_count': 0,
+                    'completed_modules': 0,
+                    'solved_problems': 0
+                }
+            activity_data[date_key]['notes_count'] += 1
+    
+    # 3. 从 Submission 表收集解决题目数（AC 状态，按提交日期，去重 problem_id）
+    # 使用字典记录每天已解决的题目，避免重复计算
+    solved_problems_by_date = {}
+    all_submissions = Submission.query.filter_by(user_id=user_id, status='AC').all()
+    for submission in all_submissions:
+        if submission.submitted_at:
+            date_key = submission.submitted_at.date()
+            if date_key not in solved_problems_by_date:
+                solved_problems_by_date[date_key] = set()
+            # 使用 set 去重，同一天同一题目只计一次
+            solved_problems_by_date[date_key].add(submission.problem_id)
+    
+    # 将去重后的解决题目数添加到 activity_data
+    for date_key, problem_ids in solved_problems_by_date.items():
+        if date_key not in activity_data:
+            activity_data[date_key] = {
+                'study_time': 0.0,
+                'notes_count': 0,
+                'completed_modules': 0,
+                'solved_problems': 0
+            }
+        activity_data[date_key]['solved_problems'] = len(problem_ids)
     
     # 生成过去一年的完整日期数据（365天）
     today = datetime.now().date()
@@ -280,14 +323,20 @@ def profile():
         valid_data = {k: v for k, v in activity_data.items() if k >= earliest_date}
         if valid_data:
             max_study_time = max(data['study_time'] for data in valid_data.values())
-            max_count = max(data['count'] for data in valid_data.values())
+            max_notes = max(data['notes_count'] for data in valid_data.values())
+            max_modules = max(data['completed_modules'] for data in valid_data.values())
+            max_problems = max(data['solved_problems'] for data in valid_data.values())
         else:
             max_study_time = 0
-            max_count = 0
+            max_notes = 0
+            max_modules = 0
+            max_problems = 0
     else:
         earliest_date = None
         max_study_time = 0
-        max_count = 0
+        max_notes = 0
+        max_modules = 0
+        max_problems = 0
     
     # 生成完整的过去365天数据
     activity_list = []
@@ -300,29 +349,49 @@ def profile():
             activity_list.append({
                 'date': date_str,
                 'level': 0,
-                'count': 0,
-                'study_time': 0.0
+                'count': 0,  # 保持兼容性
+                'study_time': 0.0,
+                'notes_count': 0,
+                'completed_modules': 0,
+                'solved_problems': 0
             })
         else:
             # 计算活跃度级别
             data = activity_data[date]
             study_time = data['study_time']
-            count = data['count']
+            notes_count = data['notes_count']
+            completed_modules = data['completed_modules']
+            solved_problems = data['solved_problems']
             
-            # 根据学习时长和活动次数计算活跃度级别
+            # 计算各维度分数（归一化到 0-1）
+            # 学习时长：权重 0.35   
             if max_study_time > 0:
-                time_score = (study_time / max_study_time) * 0.7
+                time_score = (study_time / max_study_time) * 0.35               
             else:
                 time_score = 0
             
-            if max_count > 0:
-                count_score = (count / max_count) * 0.3
+            # 笔记数：权重 0.1
+            if max_notes > 0:
+                notes_score = (notes_count / max_notes) * 0.1
             else:
-                count_score = 0
+                notes_score = 0
             
-            total_score = time_score + count_score
+            # 完成模块数：权重 0.2
+            if max_modules > 0:
+                modules_score = (completed_modules / max_modules) * 0.2
+            else:
+                modules_score = 0
             
-            # 转换为 0-4 级别
+            # 解决题目数：权重 0.35
+            if max_problems > 0:
+                problems_score = (solved_problems / max_problems) * 0.35
+            else:
+                problems_score = 0
+            
+            # 计算总分（0-1）
+            total_score = time_score + notes_score + modules_score + problems_score
+            
+            # 转换为 0-4 级别（score 越高，level 越高，颜色越深）
             if total_score >= 0.8:
                 level = 4
             elif total_score >= 0.6:
@@ -334,11 +403,17 @@ def profile():
             else:
                 level = 0
             
+            # 计算总活动数（用于兼容前端显示）
+            total_count = notes_count + completed_modules + solved_problems
+            
             activity_list.append({
                 'date': date_str,
                 'level': level,
-                'count': count,
-                'study_time': round(study_time, 2)
+                'count': total_count,  # 保持兼容性
+                'study_time': round(study_time, 2),
+                'notes_count': notes_count,
+                'completed_modules': completed_modules,
+                'solved_problems': solved_problems
             })
     
     return render_template('profile.html', 

@@ -204,16 +204,24 @@
     }
 
     .activity-graph {
+        margin-left: 25px; /* 右移 */
         display: flex;
         gap: 3px;
         flex-wrap: wrap;
         margin-bottom: 1rem;
     }
 
-    .activity-month {
-        display: flex;
+    /* .activity-month {
+        text-align: left;
+        display: block;
         flex-direction: column;
         gap: 3px;
+    } */
+    .activity-months {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        transform: none !important;
+        left: 0 !important;
     }
 
     .activity-week {
@@ -460,13 +468,13 @@
         <div class="activity-weekdays">
             <div class="activity-weekday"></div>
             <div class="activity-weekday"></div>
+            <div class="activity-weekday">日</div>
             <div class="activity-weekday">一</div>
             <div class="activity-weekday">二</div>
             <div class="activity-weekday">三</div>
             <div class="activity-weekday">四</div>
             <div class="activity-weekday">五</div>
             <div class="activity-weekday">六</div>
-            <div class="activity-weekday">日</div>
         </div>
         <div class="flex-grow-1">
             <div class="activity-months" id="activityMonths"></div>

@@ -1310,6 +1310,7 @@ def inject_navigation():
     current_user = None
     user_id = None
     username = 'Guest'
+    nav_avatar_url = None
 
     try:
         if 'user_id' in session:
@@ -1318,6 +1319,10 @@ def inject_navigation():
             current_user = User.query.get(user_id)
             if current_user:
                 username = current_user.username
+                # 获取用户头像URL（用于导航栏显示）
+                user_profile = UserProfile.query.filter_by(user_id=user_id).first()
+                if user_profile and user_profile.avatar:
+                    nav_avatar_url = url_for('get_avatar', filename=user_profile.avatar)
     except Exception:
         pass
 
@@ -1327,7 +1332,8 @@ def inject_navigation():
         username=username,
         current_user=current_user,
         user_id=user_id,
-        is_logged_in=('user_id' in session)
+        is_logged_in=('user_id' in session),
+        nav_avatar_url=nav_avatar_url
     )
 
 # ======================== 启动应用 ========================

@@ -5,7 +5,7 @@
 {% block extra_css %}
 <style>
     .profile-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        background: #acbdcf;
         border-radius: var(--border-radius);
         padding: 2rem;
         margin-bottom: 2rem;
@@ -23,9 +23,12 @@
         height: 150px;
         border-radius: 50%;
         border: 4px solid white;
-        object-fit: cover;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
     }
 
     .avatar-upload-overlay {
@@ -311,6 +314,27 @@
         object-fit: cover;
         border: 4px solid var(--primary-color);
         display: block;
+        background-color: #f8f9fa;
+    }
+
+    .avatar-preview-container {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        margin: 1rem auto;
+        border: 4px solid var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #f8f9fa;
+    }
+
+    .avatar-preview-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
     }
 
     .avatar-upload-area {
@@ -339,7 +363,12 @@
 <div class="profile-header">
     <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4">
         <div class="profile-avatar-container">
-            <img src="{% if avatar_url %}{{ avatar_url }}{% else %}https://via.placeholder.com/150?text=User{% endif %}" alt="用户头像" class="profile-avatar" id="profileAvatar">
+            <div class="profile-avatar" id="profileAvatar">
+                {% if avatar_url %}
+                <img src="{{ avatar_url }}" alt="用户头像"
+                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                {% endif %}
+            </div>
             <div class="avatar-upload-overlay" data-bs-toggle="modal" data-bs-target="#avatarUploadModal">
                 <i class="fas fa-camera"></i>
             </div>
@@ -448,18 +477,22 @@
 </div>
 
 <!-- 头像上传模态框 -->
-<div class="modal fade avatar-upload-modal" id="avatarUploadModal" tabindex="-1" aria-labelledby="avatarUploadModalLabel" aria-hidden="true">
+<div class="modal fade avatar-upload-modal" id="avatarUploadModal" tabindex="-1"
+    aria-labelledby="avatarUploadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="avatarUploadModalLabel">
                     <i class="fas fa-camera me-2"></i>上传头像
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="关闭"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="关闭"></button>
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">
-                    <img src="https://via.placeholder.com/200?text=Preview" alt="头像预览" class="avatar-preview" id="avatarPreview">
+                    <div class="avatar-preview-container" id="avatarPreviewContainer">
+                        <img id="avatarPreview" alt="头像预览" style="display: none;">
+                    </div>
                 </div>
                 <div class="avatar-upload-area" id="avatarUploadArea">
                     <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: var(--primary-color);"></i>
@@ -483,7 +516,7 @@
 {{ activity_data | tojson }}
 </script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // 使用后端传递的真实数据
         function generateActivityData() {
             // 从后端获取的活跃度数据
@@ -497,9 +530,9 @@
                 console.warn('解析活跃度数据失败:', e);
                 backendData = [];
             }
-            
+
             const data = [];
-            
+
             if (backendData && backendData.length > 0) {
                 backendData.forEach(item => {
                     data.push({
@@ -513,7 +546,7 @@
                     });
                 });
             }
-            
+
             return data;
         }
 
@@ -534,11 +567,11 @@
             const weeks = [];
             let currentWeek = [];
             let currentDate = new Date(data[0].date);
-            
+
             data.forEach((item, index) => {
                 const date = new Date(item.date);
                 const dayOfWeek = date.getDay(); // 0 = 周日, 1 = 周一, ...
-                
+
                 // 如果是周日或第一周，开始新的一周
                 if (dayOfWeek === 0 || currentWeek.length === 0) {
                     if (currentWeek.length > 0) {
@@ -550,7 +583,7 @@
                     }
                     currentWeek = [];
                 }
-                
+
                 currentWeek.push({
                     level: item.level,
                     date: item.date,
@@ -561,7 +594,7 @@
                     solved_problems: item.solved_problems
                 });
             });
-            
+
             // 添加最后一周
             if (currentWeek.length > 0) {
                 while (currentWeek.length < 7) {
@@ -600,12 +633,12 @@
             weeks.forEach((week, weekIndex) => {
                 const weekContainer = document.createElement('div');
                 weekContainer.className = 'activity-week';
-                
+
                 week.forEach((day, dayIndex) => {
                     const dayElement = document.createElement('div');
                     dayElement.className = 'activity-day';
                     dayElement.setAttribute('data-level', day.level);
-                    
+
                     if (day.date) {
                         const dateObj = new Date(day.date);
                         const dateStr = dateObj.toLocaleDateString('zh-CN');
@@ -613,7 +646,7 @@
                         const notesCount = day.notes_count || 0;
                         const modulesCount = day.completed_modules || 0;
                         const problemsCount = day.solved_problems || 0;
-                        
+
                         // 构建详细的活动信息文本
                         const activityParts = [];
                         if (studyTime > 0) {
@@ -628,11 +661,11 @@
                         if (problemsCount > 0) {
                             activityParts.push(`解决 ${problemsCount} 道题目`);
                         }
-                        
+
                         const activityText = activityParts.length > 0
                             ? `${dateStr}: ${activityParts.join('，')}`
                             : `${dateStr}: 无活动`;
-                        
+
                         dayElement.setAttribute('title', activityText);
                         dayElement.setAttribute('data-date', dateStr);
                         dayElement.setAttribute('data-count', day.count || 0);
@@ -640,16 +673,16 @@
                         dayElement.setAttribute('data-notes-count', notesCount);
                         dayElement.setAttribute('data-modules-count', modulesCount);
                         dayElement.setAttribute('data-problems-count', problemsCount);
-                        
+
                         // 添加悬停提示
-                        dayElement.addEventListener('mouseenter', function(e) {
+                        dayElement.addEventListener('mouseenter', function (e) {
                             const tooltip = document.getElementById('activityTooltip');
                             const date = this.getAttribute('data-date');
                             const studyTime = this.getAttribute('data-study-time');
                             const notesCount = this.getAttribute('data-notes-count');
                             const modulesCount = this.getAttribute('data-modules-count');
                             const problemsCount = this.getAttribute('data-problems-count');
-                            
+
                             const tooltipParts = [];
                             if (studyTime > 0) {
                                 tooltipParts.push(`学习 ${studyTime} 分钟`);
@@ -663,27 +696,27 @@
                             if (problemsCount > 0) {
                                 tooltipParts.push(`解决 ${problemsCount} 道题目`);
                             }
-                            
+
                             if (tooltipParts.length > 0) {
                                 tooltip.textContent = `${date}: ${tooltipParts.join('，')}`;
                             } else {
                                 tooltip.textContent = `${date}: 无活动`;
                             }
                             tooltip.classList.add('show');
-                            
+
                             const rect = this.getBoundingClientRect();
                             tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
                             tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
                         });
-                        
-                        dayElement.addEventListener('mouseleave', function() {
+
+                        dayElement.addEventListener('mouseleave', function () {
                             document.getElementById('activityTooltip').classList.remove('show');
                         });
                     }
-                    
+
                     weekContainer.appendChild(dayElement);
                 });
-                
+
                 graphContainer.appendChild(weekContainer);
             });
         }
@@ -692,27 +725,28 @@
         const avatarUploadArea = document.getElementById('avatarUploadArea');
         const avatarFileInput = document.getElementById('avatarFileInput');
         const avatarPreview = document.getElementById('avatarPreview');
+        const avatarPreviewContainer = document.getElementById('avatarPreviewContainer');
         const saveAvatarBtn = document.getElementById('saveAvatarBtn');
         const profileAvatar = document.getElementById('profileAvatar');
         let selectedFile = null;
 
         // 点击上传区域
-        avatarUploadArea.addEventListener('click', function() {
+        avatarUploadArea.addEventListener('click', function () {
             avatarFileInput.click();
         });
 
         // 拖拽上传
-        avatarUploadArea.addEventListener('dragover', function(e) {
+        avatarUploadArea.addEventListener('dragover', function (e) {
             e.preventDefault();
             this.classList.add('dragover');
         });
 
-        avatarUploadArea.addEventListener('dragleave', function(e) {
+        avatarUploadArea.addEventListener('dragleave', function (e) {
             e.preventDefault();
             this.classList.remove('dragover');
         });
 
-        avatarUploadArea.addEventListener('drop', function(e) {
+        avatarUploadArea.addEventListener('drop', function (e) {
             e.preventDefault();
             this.classList.remove('dragover');
             const files = e.dataTransfer.files;
@@ -722,7 +756,7 @@
         });
 
         // 文件选择
-        avatarFileInput.addEventListener('change', function(e) {
+        avatarFileInput.addEventListener('change', function (e) {
             if (this.files.length > 0) {
                 handleFileSelect(this.files[0]);
             }
@@ -745,15 +779,16 @@
 
             // 预览图片
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 avatarPreview.src = e.target.result;
+                avatarPreview.style.display = 'block';
                 saveAvatarBtn.disabled = false;
             };
             reader.readAsDataURL(file);
         }
 
         // 保存头像
-        saveAvatarBtn.addEventListener('click', function() {
+        saveAvatarBtn.addEventListener('click', function () {
             if (!selectedFile) {
                 return;
             }
@@ -766,59 +801,93 @@
             // 使用 FormData 发送到后端
             const formData = new FormData();
             formData.append('avatar', selectedFile);
-            
-            fetch('/api/upload-avatar', { 
-                method: 'POST', 
-                body: formData 
+
+            fetch('/api/upload-avatar', {
+                method: 'POST',
+                body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新头像显示（添加时间戳避免缓存）
-                    profileAvatar.src = data.avatar_url + '?t=' + Date.now();
-                    bootstrap.Modal.getInstance(document.getElementById('avatarUploadModal')).hide();
-                    
-                    // 显示成功消息
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
-                    alertDiv.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 更新头像显示（添加时间戳避免缓存）
+                        const container = document.getElementById('profileAvatar');
+                        let img = container.querySelector('img');
+                        if (img) {
+                            // 如果已存在 img，更新 src
+                            img.src = data.avatar_url + '?t=' + Date.now();
+                        } else {
+                            // 如果不存在 img，创建新的 img 元素
+                            img = document.createElement('img');
+                            img.src = data.avatar_url + '?t=' + Date.now();
+                            img.alt = '用户头像';
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'cover';
+                            img.style.borderRadius = '50%';
+                            container.appendChild(img);
+                        }
+
+                        // 恢复按钮状态
+                        saveAvatarBtn.disabled = false;
+                        saveAvatarBtn.innerHTML = originalText;
+
+                        bootstrap.Modal.getInstance(document.getElementById('avatarUploadModal')).hide();
+
+                        // 显示成功消息
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                        alertDiv.innerHTML = `
                         <strong>成功！</strong> ${data.message || '头像上传成功'}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     `;
-                    document.querySelector('.main-content .container').insertBefore(
-                        alertDiv, 
-                        document.querySelector('.profile-header')
-                    );
-                    
-                    // 3秒后自动关闭提示
-                    setTimeout(() => {
-                        alertDiv.remove();
-                    }, 3000);
-                } else {
-                    alert('上传失败: ' + (data.error || '未知错误'));
+                        document.querySelector('.main-content .container').insertBefore(
+                            alertDiv,
+                            document.querySelector('.profile-header')
+                        );
+
+                        // 3秒后自动关闭提示
+                        setTimeout(() => {
+                            alertDiv.remove();
+                        }, 3000);
+                    } else {
+                        alert('上传失败: ' + (data.error || '未知错误'));
+                        saveAvatarBtn.disabled = false;
+                        saveAvatarBtn.innerHTML = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('上传错误:', error);
+                    alert('上传失败，请稍后重试');
                     saveAvatarBtn.disabled = false;
                     saveAvatarBtn.innerHTML = originalText;
-                }
-            })
-            .catch(error => {
-                console.error('上传错误:', error);
-                alert('上传失败，请稍后重试');
-                saveAvatarBtn.disabled = false;
-                saveAvatarBtn.innerHTML = originalText;
-            })
-            .finally(() => {
-                // 重置状态
-                if (!saveAvatarBtn.disabled) {
-                    selectedFile = null;
-                    avatarFileInput.value = '';
-                }
-            });
+                })
+                .finally(() => {
+                    // 重置状态
+                    if (!saveAvatarBtn.disabled) {
+                        selectedFile = null;
+                        avatarFileInput.value = '';
+                    }
+                });
+        });
+
+        // 模态框打开时，如果有当前头像，显示在预览中
+        document.getElementById('avatarUploadModal').addEventListener('show.bs.modal', function () {
+            const currentAvatarImg = document.querySelector('#profileAvatar img');
+            if (currentAvatarImg && currentAvatarImg.src) {
+                avatarPreview.src = currentAvatarImg.src;
+                avatarPreview.style.display = 'block';
+            } else {
+                avatarPreview.src = '';
+                avatarPreview.style.display = 'none';
+            }
         });
 
         // 模态框关闭时重置
-        document.getElementById('avatarUploadModal').addEventListener('hidden.bs.modal', function() {
-            avatarPreview.src = 'https://via.placeholder.com/200?text=Preview';
+        document.getElementById('avatarUploadModal').addEventListener('hidden.bs.modal', function () {
+            avatarPreview.src = '';
+            avatarPreview.style.display = 'none';
             saveAvatarBtn.disabled = true;
+            saveAvatarBtn.innerHTML = '保存';
             selectedFile = null;
             avatarFileInput.value = '';
         });
@@ -828,4 +897,3 @@
     });
 </script>
 {% endblock %}
-

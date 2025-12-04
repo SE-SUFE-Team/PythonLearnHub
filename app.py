@@ -159,7 +159,12 @@ def profile():
     
     # 1. 总学习时长（从 Progress 表汇总 study_time，单位：分钟）
     total_study_minutes = db.session.query(db.func.sum(Progress.study_time)).filter_by(user_id=user_id).scalar() or 0.0
-    stats['total_study_minutes'] = round(total_study_minutes, 2)
+    # 小于500分钟显示分钟，超过500分钟显示为小时
+    if total_study_minutes < 500:
+        stats['total_study_time'] = f"{round(total_study_minutes, 1)} 分钟"
+    else:
+        total_study_hours = total_study_minutes / 60
+        stats['total_study_time'] = f"{round(total_study_hours, 1)} 小时"
     
     # 2. 完成模块数（progress_value >= 0.99 视为完成）
     completed_modules = Progress.query.filter_by(user_id=user_id).filter(Progress.progress_value >= 0.99).count()
@@ -171,10 +176,11 @@ def profile():
     stats['notes_count'] = notes_count
     
     # 4. 已解决题目数（status='AC' 的题目，去重 problem_id）
-    solved_problems = db.session.query(distinct(Submission.problem_id)).filter_by(
+    # 使用 distinct() 确保同一题目多次AC提交只计算一次
+    solved_problems = db.session.query(Submission.problem_id).filter_by(
         user_id=user_id, 
         status='AC'
-    ).count()
+    ).distinct().count()
     stats['solved_problems'] = solved_problems
     
     # 5. 最近活跃时间（从 Progress、Note、Submission 中取最新的）
@@ -1335,4 +1341,4 @@ for module in MODULE_NAVIGATION:
     print(f"   {module['icon']} {module['title']} - {module['difficulty']}")
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

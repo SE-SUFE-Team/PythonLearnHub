@@ -2,4 +2,3 @@ myvenv/
 .DS_Store
 __pycache__/
 *.pyc
-generate_test_data.py

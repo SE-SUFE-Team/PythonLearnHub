@@ -7,22 +7,91 @@
 <div class="hero-section bg-gradient text-dark py-5 mb-5 rounded">
     <div class="container text-center">
         <h1 class="display-4 mb-3 text-dark">
-            Python学习平台
+            Python Learn Hub
         </h1>
         <p class="lead mb-4 text-dark">
-            一个集成的Python学习环境，包含多个核心模块和实用工具
+            一个集成的Python学习平台，包含多个核心模块和实用工具
         </p>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
-                        class="fs-6">安全代码执行</span>
-                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
-                        class="fs-6">9个学习模块</span>
-                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
-                        class="fs-6">丰富示例代码</span>
-                    <span class="badge" style="background-color: var(--light-color); color: var(--dark-color);"
-                        class="fs-6">实用工具</span>
+        <div class="row g-4 justify-content-center hero-cards">
+            <div class="col-md-4">
+                <div class="card hero-info-card shadow-sm h-100">
+                    <div class="flip-inner h-100">
+                        <div class="flip-face flip-front">
+                            <div class="card-body text-start">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div
+                                        class="hero-icon bg-white text-dark rounded-circle d-inline-flex align-items-center justify-content-center me-3">
+                                        <i class="fas fa-code fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1 text-dark">简洁优雅</h5>
+                                        <small class="text-muted">“让编程变得直观易懂”</small>
+                                    </div>
+                                </div>
+                                <p class="text-secondary small mb-0">点击查看</p>
+                            </div>
+                        </div>
+                        <div class="flip-face flip-back">
+                            <div class="card-body text-start">
+                                <h5 class="text-dark mb-2">语法之美</h5>
+                                <p class="mb-2 text-secondary">Python语法接近自然语言，代码简洁优雅。用更少的代码实现更多功能，让编程变得直观易懂。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card hero-info-card shadow-sm h-100">
+                    <div class="flip-inner h-100">
+                        <div class="flip-face flip-front">
+                            <div class="card-body text-start">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div
+                                        class="hero-icon bg-white text-dark rounded-circle d-inline-flex align-items-center justify-content-center me-3">
+                                        <i class="fas fa-cubes fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1 text-dark">功能强大</h5>
+                                        <small class="text-muted">“多领域的首选语言”</small>
+                                    </div>
+                                </div>
+                                <p class="text-secondary small mb-0">点击查看</p>
+                            </div>
+                        </div>
+                        <div class="flip-face flip-back">
+                            <div class="card-body text-start">
+                                <h5 class="text-dark mb-2">应用领域</h5>
+                                <p class="mb-2 text-secondary">Python拥有庞大的标准库和第三方库生态系统。在数据科学、Web开发、人工智能、自动化运维、科学计算等领域都有广泛应用。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card hero-info-card shadow-sm h-100">
+                    <div class="flip-inner h-100">
+                        <div class="flip-face flip-front">
+                            <div class="card-body text-start">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div
+                                        class="hero-icon bg-white text-dark rounded-circle d-inline-flex align-items-center justify-content-center me-3">
+                                        <i class="fas fa-globe fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1 text-dark">生态丰富</h5>
+                                        <small class="text-muted">"一次编写，随处运行"</small>
+                                    </div>
+                                </div>
+                                <p class="text-secondary small mb-0">点击查看</p>
+                            </div>
+                        </div>
+                        <div class="flip-face flip-back">
+                            <div class="card-body text-start">
+                                <h5 class="text-dark mb-2">跨平台特性</h5>
+                                <p class="mb-2 text-secondary">Python是解释型语言，无需编译即可运行。支持Windows、macOS、Linux等主流操作系统，真正做到"一次编写，到处运行"。</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -236,6 +305,91 @@
         background-color: var(--light-color);
     }
 
+    .hero-cards .hero-info-card {
+        border: none;
+        background: linear-gradient(135deg, rgba(160, 215, 202, 0.94), rgba(181, 220, 245, 0.94));
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        perspective: 1000px;
+        transform-style: preserve-3d;
+        min-height: 240px;
+    }
+
+    /* 卡片主题色（与全站浅色+品牌紫/蓝/青调和） */
+    .hero-cards .hero-info-card:nth-child(1) .flip-face {
+        background: linear-gradient(135deg, rgba(111, 66, 193, 0.12), rgba(111, 66, 193, 0.04));
+    }
+
+    .hero-cards .hero-info-card:nth-child(2) .flip-face {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.12), rgba(52, 152, 219, 0.04));
+    }
+
+    .hero-cards .hero-info-card:nth-child(3) .flip-face {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.12), rgba(46, 204, 113, 0.04));
+    }
+
+    .hero-cards .hero-info-card::after {
+        content: "";
+        position: absolute;
+        inset: -40% auto auto -40%;
+        width: 80%;
+        height: 80%;
+        background: radial-gradient(circle at center, rgba(111, 66, 193, 0.14), transparent 60%);
+        transform: rotate(18deg);
+        opacity: 0;
+        transition: opacity 0.35s ease;
+    }
+
+    .hero-cards .hero-info-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+    }
+
+    .hero-cards .hero-info-card:hover::after {
+        opacity: 1;
+    }
+
+    .hero-icon {
+        width: 48px;
+        height: 48px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .flip-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        transition: transform 0.6s ease;
+        border-radius: 12px;
+    }
+
+    .hero-info-card.is-flipped .flip-inner {
+        transform: rotateY(180deg);
+    }
+
+    .flip-face {
+        position: absolute;
+        inset: 0;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .flip-front {
+        z-index: 2;
+    }
+
+    .flip-back {
+        transform: rotateY(180deg);
+    }
+
     .module-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         border: none;
@@ -283,12 +437,28 @@
             });
         }, observerOptions);
 
-        // Observe all module cards
-        document.querySelectorAll('.module-card').forEach(card => {
+        // Observe hero & module cards
+        const animatedCards = document.querySelectorAll('.module-card, .hero-info-card');
+        animatedCards.forEach(card => {
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
             card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(card);
+        });
+
+        // 点击翻转 hero 卡片
+        document.querySelectorAll('.hero-info-card').forEach(card => {
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.addEventListener('click', () => {
+                card.classList.toggle('is-flipped');
+            });
+            card.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    card.classList.toggle('is-flipped');
+                }
+            });
         });
 
         // Initialize module progress bars: read data-progress and set width + aria-valuenow

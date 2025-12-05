@@ -347,7 +347,7 @@ def profile():
     # 生成完整的过去365天数据
     activity_list = []
     for i in range(365):
-        date = today - timedelta(days=364 - i)
+        date = today - timedelta(days=300 - i)
         date_str = date.isoformat()
         
         # 如果日期在最早活动日期之前，或者没有活动数据，设置为无活动

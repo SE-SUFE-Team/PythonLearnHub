@@ -1347,4 +1347,4 @@ for module in MODULE_NAVIGATION:
     print(f"   {module['icon']} {module['title']} - {module['difficulty']}")
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5000)

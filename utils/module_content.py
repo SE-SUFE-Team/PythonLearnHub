@@ -301,13 +301,16 @@ print(f"交换后: a={a}, b={b}")''',
 
 # ======================== 流程控制 ========================
 FLOW_CONTROL_CONTENT = {
-    'conditional': {
-        'title': '条件语句',
-        'description': '学习if、elif、else条件语句的使用',
-        'examples': [
-            {
-                'title': 'if语句基础',
-                'code': '''# if语句基础
+    'title':'流程控制',
+    'description':'学习流程控制',
+    'topics':{
+        'conditional': {
+            'title': '条件语句',
+            'description': '学习if、elif、else条件语句的使用',
+            'examples': [
+                {
+                    'title': 'if语句基础',
+                    'code': '''# if语句基础
 age = 18
 if age >= 18:
     print("你已经成年了")
@@ -324,17 +327,17 @@ elif score >= 60:
     print("及格")
 else:
     print("不及格")''',
-                'description': 'if条件语句的基本使用'
-            }
-        ]
+                    'description': 'if条件语句的基本使用'
+                }
+            ]
     },
-    'loops': {
-        'title': '循环语句',
-        'description': '学习for和while循环的使用',
-        'examples': [
-            {
-                'title': 'for循环',
-                'code': '''# for循环遍历
+        'loops': {
+            'title': '循环语句',
+            'description': '学习for和while循环的使用',
+            'examples': [
+                {
+                    'title': 'for循环',
+                    'code': '''# for循环遍历
 fruits = ['苹果', '香蕉', '橙子']
 for fruit in fruits:
     print(f"我喜欢{fruit}")
@@ -346,11 +349,11 @@ for i in range(1, 6):
 # enumerate获取索引
 for index, fruit in enumerate(fruits):
     print(f"{index}: {fruit}")''',
-                'description': 'for循环的各种用法'
-            },
-            {
-                'title': 'while循环',
-                'code': '''# while循环
+                    'description': 'for循环的各种用法'
+                },
+                {
+                    'title': 'while循环',
+                    'code': '''# while循环
 count = 0
 while count < 5:
     print(f"计数: {count}")
@@ -362,10 +365,11 @@ for i in range(10):
         continue  # 跳过3
     if i == 7:
         break     # 在7处结束
-    print(f"当前数字: {i}")''',
-                'description': 'while循环和控制语句'
-            }
-        ]
+print(f"当前数字: {i}")''',
+                    'description': 'while循环和控制语句'
+                }
+            ]
+    }
     }
 }
 
@@ -413,14 +417,14 @@ flexible_func("必需参数", "修改默认值", "额外1", "额外2", key1="值
 EXCEPTION_ASSERTION_CONTENT = {
     'title': 'Python异常处理和断言',
     'description': '学习异常处理和断言的使用',
-    'exception_examples': {
-        'basic_exceptions': {
-            'title': '基本异常类型',
-            'examples': [
-                {
-                    'name': 'ValueError',
-                    'description': '当传递给函数的参数类型正确但值不正确时抛出',
-                    'code': '''# ValueError 示例
+    'topics':{
+            'basic_exceptions': {
+                'title': '基本异常类型',
+                'examples': [
+                    {
+                        'name': 'ValueError',
+                        'description': '当传递给函数的参数类型正确但值不正确时抛出',
+                        'code': '''# ValueError 示例
 try:
     num = int("abc")  # 字符串无法转换为整数
 except ValueError as e:
@@ -432,11 +436,11 @@ try:
     result = math.sqrt(-1)  # 负数不能开平方根
 except ValueError as e:
     print(f"数学错误: {e}")'''
-                },
-                {
-                    'name': 'TypeError',
-                    'description': '当对象类型不支持某种操作时抛出',
-                    'code': '''# TypeError 示例
+                    },
+                    {
+                        'name': 'TypeError',
+                        'description': '当对象类型不支持某种操作时抛出',
+                        'code': '''# TypeError 示例
 try:
     result = "5" + 5  # 字符串和数字不能直接相加
 except TypeError as e:
@@ -447,18 +451,17 @@ try:
     len(123)  # len()不能用于整数
 except TypeError as e:
     print(f"类型错误: {e}")'''
-                }
-            ]
-        }
-    },
-    'assertion_examples': {
-        'basic_assertions': {
-            'title': '基本断言用法',
-            'examples': [
-                {
-                    'name': '基本assert语句',
-                    'description': '使用assert进行条件检查',
-                    'code': '''# 基本断言示例
+                    }
+                ]
+            }
+        ,
+            'basic_assertions': {
+                'title': '基本断言用法',
+                'examples': [
+                    {
+                        'name': '基本assert语句',
+                        'description': '使用assert进行条件检查',
+                        'code': '''# 基本断言示例
 def calculate_square_root(x):
     assert x >= 0, "输入值必须非负"
     return x ** 0.5
@@ -467,14 +470,14 @@ def calculate_square_root(x):
 try:
     result1 = calculate_square_root(16)
     print(f"√16 = {result1}")
-    
+
     result2 = calculate_square_root(-4)  # 触发断言错误
 except AssertionError as e:
     print(f"断言错误: {e}")'''
-                }
-            ]
+                    }
+                ]
+            }
         }
-    }
 }
 
 # ======================== 文件操作 ========================

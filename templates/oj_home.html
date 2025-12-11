@@ -331,7 +331,7 @@
     let lastSubmissionsCache = [];
     let currentStatusFilter = 'ALL';
     let currentUserId = null;
-    // 是否启用庆祝动画（可持久化到 localStorage）
+    // 是否启用庆祝动画（可持久化到 sessionStorage）
     let celebrateEnabled = true;
     const draftSaveDebounceMs = 400;
     let draftSaveTimer = null;
@@ -484,7 +484,7 @@
         if (celebrateToggle) {
             celebrateToggle.addEventListener('change', function () {
                 celebrateEnabled = !!this.checked;
-                try { localStorage.setItem('oj_celebrate_enabled', celebrateEnabled ? '1' : '0'); } catch (e) { }
+                try { sessionStorage.setItem('oj_celebrate_enabled', celebrateEnabled ? '1' : '0'); } catch (e) { }
             });
         }
     }
@@ -858,7 +858,7 @@
     // ====== 庆祝动画功能 (canvas confetti + 边缘彩虹 + 声音) ======
     function initCelebrationToggle() {
         try {
-            const stored = localStorage.getItem('oj_celebrate_enabled');
+            const stored = sessionStorage.getItem('oj_celebrate_enabled');
             if (stored !== null) celebrateEnabled = (stored === '1');
         } catch (e) { }
         const el = document.getElementById('celebrate-toggle');

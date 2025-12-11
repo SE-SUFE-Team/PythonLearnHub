@@ -422,7 +422,7 @@ EXCEPTION_ASSERTION_CONTENT = {
                 'title': '基本异常类型',
                 'examples': [
                     {
-                        'name': 'ValueError',
+                        'title': 'ValueError',
                         'description': '当传递给函数的参数类型正确但值不正确时抛出',
                         'code': '''# ValueError 示例
 try:
@@ -438,7 +438,7 @@ except ValueError as e:
     print(f"数学错误: {e}")'''
                     },
                     {
-                        'name': 'TypeError',
+                        'title': 'TypeError',
                         'description': '当对象类型不支持某种操作时抛出',
                         'code': '''# TypeError 示例
 try:
@@ -459,7 +459,7 @@ except TypeError as e:
                 'title': '基本断言用法',
                 'examples': [
                     {
-                        'name': '基本assert语句',
+                        'title': '基本assert语句',
                         'description': '使用assert进行条件检查',
                         'code': '''# 基本断言示例
 def calculate_square_root(x):

@@ -14,10 +14,10 @@ erDiagram
     problems ||--o{ submissions : "一对多"
 
     users {
-        integer id PK "主键，自增"
-        string username "用户名，允许重复"
-        string email UK "邮箱，唯一"
-        string password_hash "密码哈希值(bcrypt)"
+        integer id PK "主键，8位随机数字(10000000-99999999)"
+        string username "用户名，允许重复，非空"
+        string email UK "邮箱，唯一，非空"
+        string password_hash "密码哈希值(Werkzeug)，非空"
     }
 
     user_profiles {
@@ -81,9 +81,9 @@ erDiagram
 ## 实体说明
 
 ### 1. users（用户表）
-- **主键**：`id` (Integer, 自增)
+- **主键**：`id` (Integer, 8位随机数字，范围10000000-99999999，非自增)
 - **唯一约束**：`email`
-- **说明**：存储用户基本信息，包括用户名、邮箱和加密后的密码
+- **说明**：存储用户基本信息，包括用户名、邮箱和加密后的密码。用户ID在注册时随机生成，确保唯一性。
 
 ### 2. user_profiles（用户配置表）
 - **主键**：`id` (Integer, 自增)
@@ -164,8 +164,38 @@ erDiagram
 ## 设计特点
 
 1. **用户中心设计**：所有业务数据都围绕`users`表展开
-2. **模块化进度跟踪**：通过`progress`表实现细粒度的学习进度管理
+2. **模块化进度跟踪**：通过`progress`表实现细粒度的学习进度管理，每个用户每个模块只有一条记录
 3. **完整的OJ系统**：`problems`和`submissions`表支持完整的在线判题功能
 4. **学习辅助功能**：`notes`和`code_executions`表支持笔记和代码执行历史
 5. **数据一致性**：通过外键约束和唯一约束保证数据完整性
+6. **自动数据管理**：代码执行历史自动管理，每个用户最多保留10条记录
+
+## 详细设计文档
+
+更多详细的数据库设计信息，请参考 [数据库设计文档](database_design.md)。
+
+## 如何生成ER图PNG
+
+### 方法1：使用Mermaid在线工具
+1. 访问 [Mermaid Live Editor](https://mermaid.live/)
+2. 复制上面的Mermaid ER图代码
+3. 点击"Export"按钮，选择PNG格式导出
+
+### 方法2：使用Python脚本（需要安装graphviz）
+```bash
+# 安装graphviz
+pip install graphviz
+
+# Windows用户还需要安装Graphviz软件
+# 下载地址: https://graphviz.org/download/
+
+# 运行生成脚本
+cd docs
+python generate_er_diagram.py
+```
+
+### 方法3：使用支持Mermaid的Markdown查看器
+- VS Code + Mermaid插件
+- Typora
+- GitHub/GitLab（直接查看Markdown文件）
 

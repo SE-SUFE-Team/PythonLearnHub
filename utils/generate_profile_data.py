@@ -3,12 +3,14 @@
 为 bob 账号生成学习数据，时间跨度从2025年1月到现在
 """
 import sys
+import os
 import random
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash
 
-# 添加项目路径
-sys.path.insert(0, '/Users/prussianblue/Desktop/Software Engineering/Project')
+# 添加项目路径（动态获取项目根目录）
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
 from app import app
 from models import db
@@ -19,8 +21,6 @@ from models.problem import Problem, Submission
 from utils.module_content import MODULE_NAVIGATION
 from utils.judge import judge_engine
 from sqlalchemy import distinct
-import json
-import os
 
 def generate_test_data():
     """生成测试数据"""
@@ -98,27 +98,50 @@ def generate_test_data():
         print(f"时间范围：{start_date.strftime('%Y-%m-%d')} 到 {today.strftime('%Y-%m-%d')}，共 {total_days} 天")
         
         # bob: 从2025年8月1日到现在，每天都有活动，但强度不同
+        # 使用连续性逻辑，让相邻日期的活跃度有一定关联
+        last_activity_level = 2  # 初始活跃度
+        activity_levels = []  # 记录所有活跃度级别，用于统计
+        
         for day_offset in range(total_days):
             date = start_date + timedelta(days=day_offset)
             date_only = date.date()
+            day_of_week = date.weekday()  # 0=周一, 6=周日
             
-            # 随机决定当天的活跃度（0-4级别）
-            # 大幅增加高活跃度（深色）的权重，让level 3和4占主导
-            activity_level = random.choices(
-                [0, 1, 2, 3, 4],
-                weights=[2, 5, 8, 42.5, 42.5]  # level 3和4各占42.5%，总共85%为深色
-            )[0]
+            # 根据前一天活跃度和星期几决定当天活跃度
+            # 添加连续性：有60%概率保持相近的活跃度，40%概率随机变化
+            if random.random() < 0.6:
+                # 保持连续性：在前一天活跃度基础上小幅波动（±1）
+                base_level = last_activity_level
+                change = random.choice([-1, 0, 0, 1])  # 更倾向于保持或小幅增加
+                activity_level = max(0, min(4, base_level + change))
+            else:
+                # 随机变化，但考虑星期几
+                # 工作日（周一到周五）倾向于更高活跃度
+                if day_of_week < 5:  # 工作日
+                    weights = [1, 3, 8, 25, 30]  # 工作日：更倾向于高活跃度
+                else:  # 周末
+                    weights = [3, 8, 15, 20, 15]  # 周末：活跃度稍低
+                activity_level = random.choices([0, 1, 2, 3, 4], weights=weights)[0]
+            
+            # 确保level 4有足够的天数，但不要太极端
+            # 如果连续多天都是低活跃度，增加高活跃度的概率
+            recent_low_days = sum(1 for l in activity_levels[-7:] if l <= 1)
+            if recent_low_days >= 5 and random.random() < 0.3:
+                activity_level = random.choice([3, 4])
+            
+            last_activity_level = activity_level
+            activity_levels.append(activity_level)
             
             if activity_level > 0:
-                # 学习时长：大幅增加学习时长，让高活跃度有更长的学习时间
+                # 学习时长：更合理的分布，避免极端值
                 if activity_level == 1:
-                    study_time = random.uniform(20, 50)
+                    study_time = random.uniform(15, 40)
                 elif activity_level == 2:
-                    study_time = random.uniform(50, 100)
+                    study_time = random.uniform(40, 80)
                 elif activity_level == 3:
-                    study_time = random.uniform(100, 200)
-                else:  # level 4
-                    study_time = random.uniform(150, 300)
+                    study_time = random.uniform(80, 150)
+                else:  # level 4 - 深度学习，但不要过于极端
+                    study_time = random.uniform(120, 220)  # 降低上限，更自然
                 
                 # 随机选择1-4个模块进行学习（高活跃度选择更多模块）
                 max_modules = min(2 + activity_level, len(module_ids))
@@ -150,15 +173,15 @@ def generate_test_data():
                         progress.progress_value = min((progress.progress_value or 0) + random.uniform(0.1, 0.3), 1.0)
                         progress.last_updated = date
                 
-                # 笔记：减少笔记数量
+                # 笔记：更自然的分布
                 if activity_level == 1:
                     notes_count = random.randint(0, 1)
                 elif activity_level == 2:
-                    notes_count = random.randint(0, 1)
-                elif activity_level == 3:
                     notes_count = random.randint(0, 2)
+                elif activity_level == 3:
+                    notes_count = random.randint(1, 3)
                 else:  # level 4
-                    notes_count = random.randint(1, 2)
+                    notes_count = random.randint(2, 4)  # 深度学习时笔记更多
                 for _ in range(notes_count):
                     note = Note(
                         user_id=bob.id,
@@ -182,15 +205,15 @@ def generate_test_data():
                             progress.progress_value = 1.0
                             progress.last_updated = date
                 
-                # 解决题目：大幅增加题目数量，允许重复做同一道题
+                # 解决题目：更自然的分布，避免极端值
                 if activity_level == 1:
-                    problems_solved = random.randint(1, 3)
+                    problems_solved = random.randint(1, 2)
                 elif activity_level == 2:
-                    problems_solved = random.randint(2, 5)
+                    problems_solved = random.randint(2, 4)
                 elif activity_level == 3:
-                    problems_solved = random.randint(5, 10)
-                else:  # level 4
-                    problems_solved = random.randint(8, 15)
+                    problems_solved = random.randint(4, 8)
+                else:  # level 4 - 深度学习，但不要过于极端
+                    problems_solved = random.randint(6, 12)  # 降低上限，更合理
                 
                 # 允许重复做同一道题，不进行去重
                 for _ in range(problems_solved):
@@ -221,6 +244,18 @@ def generate_test_data():
             status='AC'
         ).filter(Submission.problem_id <= 5).distinct().count()
         print(f"  已解决题目数: {solved_unique} 道（去重后）")
+        
+        # 统计活跃度级别分布
+        if activity_levels:
+            level_counts = {}
+            for level in range(5):
+                level_counts[level] = activity_levels.count(level)
+            print(f"\n活跃度级别分布：")
+            for level in range(5):
+                count = level_counts[level]
+                percentage = (count / len(activity_levels)) * 100
+                level_name = ['无活动', '较少', '中等', '较多', '很多'][level]
+                print(f"  Level {level} ({level_name}): {count} 天 ({percentage:.1f}%)")
 
 if __name__ == '__main__':
     generate_test_data()

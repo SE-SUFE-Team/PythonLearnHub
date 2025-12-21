@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve PythonLearnHub
+After=network.target
+
+[Service]
+User=evelynlu
+Group=evelynlu
+WorkingDirectory=/home/evelynlu/EvelynApplications/PythonLearnHub
+Environment="PATH=/home/evelynlu/EvelynApplications/PythonLearnHub/venv/bin"
+ExecStart=/home/evelynlu/EvelynApplications/PythonLearnHub/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 -m 007 app:app
+
+[Install]
+WantedBy=multi-user.target
